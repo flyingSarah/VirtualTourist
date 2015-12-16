@@ -27,6 +27,7 @@ class FlickrClient : NSObject {
     {
         //build the url and configure the request
         let urlString = FlickrClient.Constants.BASE_URL + FlickrClient.escapedParameters(parameters)
+        print("attempting to request the following url:\n  \(urlString)")
         let url = NSURL(string: urlString)!
         let request = NSURLRequest(URL: url)
         
@@ -65,7 +66,7 @@ class FlickrClient : NSObject {
                     return NSError(domain: "Flickr Parse Error", code: errorCode, userInfo: userInfo)
                 }
                 
-                return NSError(domain: "Flickr Parse Error", code: 1, userInfo: userInfo)
+                return NSError(domain: "Flickr Parse Error", code: 0, userInfo: userInfo)
             }
         }
         
@@ -91,7 +92,7 @@ class FlickrClient : NSObject {
         }
         else
         {
-            if let _ = parsedResult?.valueForKey(FlickrClient.JSONResponseKeys.STATUS) as? String
+            if let _ = parsedResult?.valueForKey(FlickrClient.JSONResponseKeys.CODE) as? String
             {
                 let newError = errorForData(data, response: nil, error: nil)
                 completionHandler(result: nil, error: newError)

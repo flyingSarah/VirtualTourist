@@ -17,7 +17,7 @@ extension FlickrClient {
         static let FLICKR_API_KEY : String = "220d9db60b6326d5a7b7e947a01cbe64"
         
         //URLs
-        static let BASE_URL : String = "https://api.flickr.com/services/rest/"
+        static let BASE_URL : String = "https://api.flickr.com/services/rest/?"
         
         static let MAX_TOTAL_PAGES = 40
         static let BOUNDING_BOX_HALF_WIDTH = 1.0

@@ -63,14 +63,17 @@ extension FlickrClient {
                                 {
                                     if let photos = pageAddedJSONResult.valueForKey(FlickrClient.JSONResponseKeys.PHOTOS) as? NSDictionary
                                     {
-                                        
-                                        if let totalPhotos = photos.valueForKey(FlickrClient.JSONResponseKeys.TOTAL) as? Int
+                                        if let totalPhotosString = photos.valueForKey(FlickrClient.JSONResponseKeys.TOTAL) as? String
                                         {
+                                            let totalPhotos = Int(totalPhotosString)
+                                            
                                             if(totalPhotos > 0)
                                             {
                                                 if let photoArray = photos.valueForKey("photo") as? [[String : AnyObject]]
                                                 {
+                                                    print("Successfully found photos from Flickr")
                                                     let photos = Photo.photosFromResults(photoArray)
+                                                    FlickrClient.sharedInstance().photos = photos
                                                     
                                                     completionHandler(result: photos, error: nil)
                                                 }

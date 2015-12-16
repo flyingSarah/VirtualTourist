@@ -34,11 +34,12 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             
             if let error = error
             {
-                print("error getting photos from lat/lon:\n  \(error.localizedDescription)")
+                print("error getting photos from lat/lon:\n  \(error.code)\n  \(error.localizedDescription)")
             }
             else
             {
-                let firstImageURL = FlickrClient.sharedInstance().photos.first?.valueForKey(FlickrClient.JSONResponseKeys.PHOTO_URL)
+                let firstImageURL = FlickrClient.sharedInstance().photos.first?.valueForKey(FlickrClient.JSONResponseKeys.TITLE)
+                
                 print("sucessfully got photos! first url is: \(firstImageURL)")
             }
         }
