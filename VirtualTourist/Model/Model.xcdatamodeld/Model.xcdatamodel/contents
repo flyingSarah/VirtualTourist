@@ -6,8 +6,8 @@
         <relationship name="photo" toMany="YES" deletionRule="Cascade" ordered="YES" destinationEntity="Photo" inverseName="location" inverseEntity="Photo" syncable="YES"/>
     </entity>
     <entity name="Photo" syncable="YES">
-        <attribute name="imagePath" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="title" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="url_m" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="location" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Location" inverseName="photo" inverseEntity="Location" syncable="YES"/>
     </entity>
     <elements>

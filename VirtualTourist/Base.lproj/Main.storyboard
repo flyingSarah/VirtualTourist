@@ -36,17 +36,35 @@
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="Cmg-an-tKh">
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                             </mapView>
+                            <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="touch pins to delete them" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Xwj-3Z-qlP">
+                                <rect key="frame" x="20" y="72" width="560" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" white="0.0" alpha="0.29999999999999999" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="Cmg-an-tKh" firstAttribute="top" secondItem="Gy6-Mr-LFI" secondAttribute="topMargin" id="20Z-jo-zAO"/>
                             <constraint firstItem="Cmg-an-tKh" firstAttribute="leading" secondItem="Gy6-Mr-LFI" secondAttribute="leadingMargin" constant="-20" id="DcI-TI-cFt"/>
+                            <constraint firstItem="Xwj-3Z-qlP" firstAttribute="leading" secondItem="Cmg-an-tKh" secondAttribute="trailing" constant="-580" id="JN3-ld-Z5i"/>
+                            <constraint firstItem="Xwj-3Z-qlP" firstAttribute="centerX" secondItem="Cmg-an-tKh" secondAttribute="centerX" id="K09-n4-cT9"/>
+                            <constraint firstItem="Cmg-an-tKh" firstAttribute="top" secondItem="Xwj-3Z-qlP" secondAttribute="bottom" constant="-93" id="LAE-lu-g3j"/>
                             <constraint firstAttribute="trailingMargin" secondItem="Cmg-an-tKh" secondAttribute="trailing" constant="-20" id="Vgu-NA-Be0"/>
+                            <constraint firstItem="Xwj-3Z-qlP" firstAttribute="leading" secondItem="Cmg-an-tKh" secondAttribute="trailing" constant="-580" id="XRq-V2-eFd"/>
                             <constraint firstItem="jEI-Kh-vs4" firstAttribute="top" secondItem="Cmg-an-tKh" secondAttribute="bottom" id="eSA-ew-Z9v"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" id="8rt-Ng-FIZ"/>
+                    <navigationItem key="navigationItem" title="Virtual Tourist" id="8rt-Ng-FIZ">
+                        <barButtonItem key="rightBarButtonItem" title="Delete" id="zbL-Pp-hX9">
+                            <connections>
+                                <action selector="deleteButtonPressed:" destination="Zz9-7h-MhX" id="Zra-A3-nfd"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
+                        <outlet property="deleteLabel" destination="Xwj-3Z-qlP" id="KDG-Rr-zAO"/>
+                        <outlet property="deleteModeButton" destination="zbL-Pp-hX9" id="rXd-lw-xpi"/>
                         <outlet property="mapView" destination="Cmg-an-tKh" id="kDC-Hq-XcD"/>
                         <segue destination="5MR-gq-88c" kind="show" identifier="showPhotoViewSegue" id="6NS-MC-bFP"/>
                     </connections>

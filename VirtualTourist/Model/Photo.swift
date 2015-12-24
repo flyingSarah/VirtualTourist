@@ -17,7 +17,7 @@ class Photo : NSManagedObject {
         static let Title = FlickrClient.JSONResponseKeys.TITLE
     }
     
-    @NSManaged var imagePath: String
+    @NSManaged var url_m: String
     @NSManaged var title: String
     @NSManaged var location: Location?
     
@@ -39,7 +39,7 @@ class Photo : NSManagedObject {
         
         // After the Core Data work has been taken care of we can init the properties from the
         // dictionary. This works in the same way that it did before we started on Core Data
-        imagePath = dictionary[Keys.ImagePath] as! String
+        url_m = dictionary[Keys.ImagePath] as! String
         title = dictionary[Keys.Title] as! String
     }
     

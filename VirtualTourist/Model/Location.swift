@@ -7,9 +7,10 @@
 //
 
 import UIKit
+import MapKit
 import CoreData
 
-class Location : NSManagedObject {
+class Location : NSManagedObject, MKAnnotation {
     
     struct Keys
     {
@@ -18,8 +19,8 @@ class Location : NSManagedObject {
         static let Photos = "photos"
     }
     
-    @NSManaged var latitude: NSNumber
-    @NSManaged var longitude: NSNumber
+    @NSManaged var latitude: Double
+    @NSManaged var longitude: Double
     @NSManaged var photos: [Photo]
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
@@ -40,7 +41,18 @@ class Location : NSManagedObject {
         
         // After the Core Data work has been taken care of we can init the properties from the
         // dictionary. This works in the same way that it did before we started on Core Data
-        latitude = dictionary[Keys.Latitude] as! NSNumber
-        longitude = dictionary[Keys.Longitude] as! NSNumber
+        latitude = dictionary[Keys.Latitude] as! Double
+        longitude = dictionary[Keys.Longitude] as! Double
+    }
+    
+    //I set this up based dimitrios_108861's solution from this discussion thread: https://discussions.udacity.com/t/virtual-tourist-dragging-a-pin/28906/8
+    var coordinate: CLLocationCoordinate2D {
+        set(newValue) {
+            latitude = newValue.latitude
+            longitude = newValue.longitude
+        }
+        get {
+            return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        }
     }
 }
