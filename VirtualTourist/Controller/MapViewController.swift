@@ -21,6 +21,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     var longPressRecognizer: UILongPressGestureRecognizer? = nil
     var currentAnnotation: MKPointAnnotation? = nil
     var deleteModeEnabled = false
+    var didDragPin = false
     
     //MARK --- Lifecycle
     
@@ -69,7 +70,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             deleteModeButton.title = "Delete"
             deleteLabel.hidden = true
             
-            //update context if pins change
+            //TODO: update context if pins change
         }
         else
         {
@@ -94,7 +95,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     func pinDrop(recognizer: UILongPressGestureRecognizer)
     {
-        //I learned how to get the pins location from this thread on the forums: https://discussions.udacity.com/t/how-can-i-make-a-new-pin-draggable-right-after-adding-it/26653
+        //I learned how to get the pins location and allow dragging right when it's dropped from this thread on the forums: https://discussions.udacity.com/t/how-can-i-make-a-new-pin-draggable-right-after-adding-it/26653
         let longPressLocation: CGPoint = recognizer.locationInView(mapView)
         let pinLocation = mapView.convertPoint(longPressLocation, toCoordinateFromView: mapView)
         
@@ -111,13 +112,11 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         }
         else if(recognizer.state == UIGestureRecognizerState.Changed)
         {
-            print("updated current pin - latitude: \(pinLocation.latitude) longitude: \(pinLocation.longitude)")
-                
             currentAnnotation?.coordinate = pinLocation
         }
         else if(recognizer.state == UIGestureRecognizerState.Ended)
         {
-            //save context
+            //TODO: save context
         }
     }
     
@@ -133,13 +132,21 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         {
             //delete the pin if we are in edit mode
             mapView.removeAnnotation(view.annotation!)
-            print("delete the selected annotation at latitude: \(view.annotation?.coordinate.latitude) longitude: \(view.annotation?.coordinate.longitude)")
         }
         else
         {
-            //TODO: make it so you can drag the pin anywhere else??
-            //currentAnnotation = view.annotation
-            print("go to the selected annotation view at latitude : \(view.annotation?.coordinate.latitude) longitude: \(view.annotation?.coordinate.longitude)")
+            if(didDragPin)
+            {
+                didDragPin = false
+                //TODO: save context
+            }
+            else
+            {
+                print("go to the selected annotation view at latitude : \(view.annotation?.coordinate.latitude) longitude: \(view.annotation?.coordinate.longitude)")
+                
+                //TODO: find the photos for the selected latitude and longitude and go to the table view... should I save the context here?  I'm not sure
+                performSegueWithIdentifier("showPhotoViewSegue", sender: self)
+            }
         }
     }
     
@@ -173,7 +180,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         switch (newState)
         {
         case .Ending, .Canceling:
-            print("done dragging")
+            didDragPin = true
         default: break
         }
     }
