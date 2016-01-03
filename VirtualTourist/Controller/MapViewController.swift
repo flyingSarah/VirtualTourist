@@ -8,6 +8,7 @@
 
 import UIKit
 import MapKit
+import CoreData
 
 class MapViewController: UIViewController, MKMapViewDelegate {
     
@@ -19,7 +20,9 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     //MARK --- Useful Variables
     
     var longPressRecognizer: UILongPressGestureRecognizer? = nil
-    var currentAnnotation: MKPointAnnotation? = nil
+    
+    var currentPin: Location? = nil
+    
     var deleteModeEnabled = false
     var didDragPin = false
     
@@ -42,33 +45,36 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         
         addPinDropRecognizer()
         
-        FlickrClient.sharedInstance().getPhotos(36.0, longitude: -115.0) { result, error in
-            
-            if let error = error
+        //add the pin annotations to the map by fetching the saved locations
+        let pins = fetchLocations()
+        
+        if(!pins.isEmpty)
+        {
+            for pin in pins
             {
-                print("error getting photos from lat/lon:\n  \(error.code)\n  \(error.localizedDescription)")
-            }
-            else
-            {
-                let firstImageURL = FlickrClient.sharedInstance().photos.first?.valueForKey(FlickrClient.JSONResponseKeys.PHOTO_URL)
-                
-                print("sucessfully got photos! first url is: \(firstImageURL!)")
+                mapView.addAnnotation(pin)
             }
         }
     }
     
     //MARK --- Core Data
     
+    var sharedContext: NSManagedObjectContext {
+        return CoreDataStackManager.sharedInstance().managedObjectContext
+    }
     
     //MARK --- Button Behavior
     
     @IBAction func deleteButtonPressed(sender: AnyObject)
     {
+        //TODO: might want to check to see if there are any pins first before entering delete mode
+        
         if(deleteModeEnabled)
         {
             deleteModeEnabled = false
             deleteModeButton.title = "Delete"
             deleteLabel.hidden = true
+            addPinDropRecognizer()
             
             //TODO: update context if pins change
         }
@@ -77,11 +83,28 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             deleteModeEnabled = true
             deleteModeButton.title = "Done"
             deleteLabel.hidden = false
+            removePinDropRecognizer()
         }
     }
     
     
     //MARK --- Map Behavior
+    
+    func fetchLocations() -> [Location]
+    {
+        let fetchRequest = NSFetchRequest(entityName: "Location")
+        
+        //get all of the locations
+        do
+        {
+            let fetchedLocations = try sharedContext.executeFetchRequest(fetchRequest) as! [Location]
+            return fetchedLocations
+        }
+        catch
+        {
+            return [Location]()
+        }
+    }
     
     func addPinDropRecognizer()
     {
@@ -102,21 +125,21 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         //depending on the state of the gesture, add or select a pin, move it, or save the context
         if(recognizer.state == UIGestureRecognizerState.Began)
         {
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = pinLocation
-            currentAnnotation = annotation
+            currentPin = Location(latitude: pinLocation.latitude, longitude: pinLocation.longitude, context: sharedContext)
             
             print("add new pin at latitude: \(pinLocation.latitude) longitude: \(pinLocation.longitude)")
             
-            mapView.addAnnotation(annotation)
+            mapView.addAnnotation(currentPin!)
         }
         else if(recognizer.state == UIGestureRecognizerState.Changed)
         {
-            currentAnnotation?.coordinate = pinLocation
+            currentPin!.latitude = pinLocation.latitude
+            currentPin!.longitude = pinLocation.longitude
         }
         else if(recognizer.state == UIGestureRecognizerState.Ended)
         {
-            //TODO: save context
+            //save context now that new pins have been added
+            CoreDataStackManager.sharedInstance().saveContext()
         }
     }
     
@@ -128,24 +151,32 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         mapView.deselectAnnotation(view.annotation, animated: false)
         view.setSelected(true, animated: false)
         
+        currentPin = view.annotation as? Location
+        
         if(deleteModeEnabled)
         {
             //delete the pin if we are in edit mode
             mapView.removeAnnotation(view.annotation!)
+            sharedContext.deleteObject(currentPin!)
+            CoreDataStackManager.sharedInstance().saveContext()
         }
         else
         {
             if(didDragPin)
             {
                 didDragPin = false
-                //TODO: save context
+                CoreDataStackManager.sharedInstance().saveContext()
             }
             else
             {
                 print("go to the selected annotation view at latitude : \(view.annotation?.coordinate.latitude) longitude: \(view.annotation?.coordinate.longitude)")
                 
-                //TODO: find the photos for the selected latitude and longitude and go to the table view... should I save the context here?  I'm not sure
-                performSegueWithIdentifier("showPhotoViewSegue", sender: self)
+                //set the current pin as the pin that the photo controller will use, then segue to the photo view
+                let photoController = storyboard!.instantiateViewControllerWithIdentifier("PhotoViewController") as! PhotoViewController
+                
+                photoController.thisPin = currentPin
+                
+                navigationController!.pushViewController(photoController, animated: true)
             }
         }
     }
@@ -184,6 +215,4 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         default: break
         }
     }
-    
-    //MARK --- Helpers
 }

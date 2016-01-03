@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		350A9DEF1C38B481009F5EA4 /* PhotoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350A9DEE1C38B481009F5EA4 /* PhotoViewController.swift */; settings = {ASSET_TAGS = (); }; };
+		350A9DF21C38C55C009F5EA4 /* PhotoViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 350A9DF11C38C55C009F5EA4 /* PhotoViewCell.swift */; settings = {ASSET_TAGS = (); }; };
 		35D20BF81C1157FB000BA79D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35D20BF71C1157FB000BA79D /* AppDelegate.swift */; };
 		35D20BFF1C1157FB000BA79D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 35D20BFD1C1157FB000BA79D /* Main.storyboard */; };
 		35D20C011C1157FB000BA79D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 35D20C001C1157FB000BA79D /* Assets.xcassets */; };
@@ -42,6 +44,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		350A9DEE1C38B481009F5EA4 /* PhotoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PhotoViewController.swift; path = Controller/PhotoViewController.swift; sourceTree = "<group>"; };
+		350A9DF11C38C55C009F5EA4 /* PhotoViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PhotoViewCell.swift; path = View/PhotoViewCell.swift; sourceTree = "<group>"; };
 		35D20BF41C1157FB000BA79D /* VirtualTourist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VirtualTourist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		35D20BF71C1157FB000BA79D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		35D20BFE1C1157FB000BA79D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -91,6 +95,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		350A9DF01C38C4F9009F5EA4 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				35D20BFD1C1157FB000BA79D /* Main.storyboard */,
+				350A9DF11C38C55C009F5EA4 /* PhotoViewCell.swift */,
+			);
+			name = View;
+			sourceTree = "<group>";
+		};
 		35D20BEB1C1157FB000BA79D = {
 			isa = PBXGroup;
 			children = (
@@ -116,9 +129,9 @@
 			isa = PBXGroup;
 			children = (
 				35D20C2C1C116B83000BA79D /* Model */,
+				350A9DF01C38C4F9009F5EA4 /* View */,
 				35D20C291C116676000BA79D /* Controller */,
 				35D20BF71C1157FB000BA79D /* AppDelegate.swift */,
-				35D20BFD1C1157FB000BA79D /* Main.storyboard */,
 				35D20C001C1157FB000BA79D /* Assets.xcassets */,
 				35D20C021C1157FB000BA79D /* LaunchScreen.storyboard */,
 				35D20C051C1157FB000BA79D /* Info.plist */,
@@ -148,6 +161,7 @@
 			isa = PBXGroup;
 			children = (
 				35D20C2A1C1166F2000BA79D /* MapViewController.swift */,
+				350A9DEE1C38B481009F5EA4 /* PhotoViewController.swift */,
 			);
 			name = Controller;
 			sourceTree = "<group>";
@@ -305,6 +319,8 @@
 				35D20C351C11784D000BA79D /* CoreDataStackManager.swift in Sources */,
 				35D20C391C193774000BA79D /* FlickrClient.swift in Sources */,
 				35D20C3B1C1E3DEA000BA79D /* FlickrConvenience.swift in Sources */,
+				350A9DEF1C38B481009F5EA4 /* PhotoViewController.swift in Sources */,
+				350A9DF21C38C55C009F5EA4 /* PhotoViewCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -529,6 +545,7 @@
 				35D20C201C1157FB000BA79D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		35D20C211C1157FB000BA79D /* Build configuration list for PBXNativeTarget "VirtualTouristTests" */ = {
 			isa = XCConfigurationList;
@@ -537,6 +554,7 @@
 				35D20C231C1157FB000BA79D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		35D20C241C1157FB000BA79D /* Build configuration list for PBXNativeTarget "VirtualTouristUITests" */ = {
 			isa = XCConfigurationList;
@@ -545,6 +563,7 @@
 				35D20C261C1157FB000BA79D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 

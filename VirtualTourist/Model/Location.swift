@@ -6,7 +6,7 @@
 //  Copyright © 2015 SarahHowe. All rights reserved.
 //
 
-import UIKit
+import Foundation
 import MapKit
 import CoreData
 
@@ -27,7 +27,7 @@ class Location : NSManagedObject, MKAnnotation {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
     }
     
-    init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
+    init(latitude: Double, longitude: Double, context: NSManagedObjectContext) {
         
         // Get the entity associated with the "Person" type.  This is an object that contains
         // the information from the Model.xcdatamodeld file. We will talk about this file in
@@ -41,8 +41,8 @@ class Location : NSManagedObject, MKAnnotation {
         
         // After the Core Data work has been taken care of we can init the properties from the
         // dictionary. This works in the same way that it did before we started on Core Data
-        latitude = dictionary[Keys.Latitude] as! Double
-        longitude = dictionary[Keys.Longitude] as! Double
+        self.latitude = latitude
+        self.longitude = longitude
     }
     
     //I set this up based dimitrios_108861's solution from this discussion thread: https://discussions.udacity.com/t/virtual-tourist-dragging-a-pin/28906/8
@@ -52,7 +52,7 @@ class Location : NSManagedObject, MKAnnotation {
             longitude = newValue.longitude
         }
         get {
-            return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+            return CLLocationCoordinate2DMake(latitude as CLLocationDegrees, longitude as CLLocationDegrees)
         }
     }
 }

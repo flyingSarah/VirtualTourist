@@ -51,7 +51,7 @@ class Photo : NSManagedObject {
         for result in results
         {
             //for now I'm just saving the image title and url
-            let filteredResult : [String : AnyObject] = [Keys.Title : result[Keys.Title]!, Keys.ImagePath: result[Keys.ImagePath]!]
+            let filteredResult: [String: AnyObject] = [Keys.Title: result[Keys.Title]!, Keys.ImagePath: result[Keys.ImagePath]!]
             //print("photosFromResults -----------------\n\(filteredResult)\n")
             photos.append(Photo(dictionary: filteredResult, context: CoreDataStackManager.sharedInstance().managedObjectContext))
         }
