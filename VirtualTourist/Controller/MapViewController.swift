@@ -171,11 +171,17 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             {
                 print("go to the selected annotation view at latitude : \(view.annotation?.coordinate.latitude) longitude: \(view.annotation?.coordinate.longitude)")
                 
-                //set the current pin as the pin that the photo controller will use, then segue to the photo view
+                //set the current pin as the pin that the photo controller will use
                 let photoController = storyboard!.instantiateViewControllerWithIdentifier("PhotoViewController") as! PhotoViewController
                 
                 photoController.thisPin = currentPin
                 
+                //set the back item to say "OK" instead of "Virtual Tourist"
+                //learned how to do this from this stackoverflow topic: http://stackoverflow.com/questions/9871578/how-to-change-the-uinavigationcontroller-back-button-name
+                let backItem = UIBarButtonItem(title: "OK", style: .Plain, target: nil, action: nil)
+                navigationItem.backBarButtonItem = backItem
+                
+                //go to the photo view controller
                 navigationController!.pushViewController(photoController, animated: true)
             }
         }

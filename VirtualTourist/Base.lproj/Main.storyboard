@@ -107,6 +107,9 @@
                                             <rect key="frame" x="0.0" y="0.0" width="140" height="140"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
+                                                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="8XJ-Kl-Ix2">
+                                                    <rect key="frame" x="0.0" y="0.0" width="140" height="140"/>
+                                                </imageView>
                                                 <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="WFK-mZ-mxl">
                                                     <rect key="frame" x="60" y="60" width="20" height="20"/>
                                                 </activityIndicatorView>
@@ -114,11 +117,16 @@
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
                                         <constraints>
+                                            <constraint firstItem="8XJ-Kl-Ix2" firstAttribute="leading" secondItem="a5t-Eo-6F7" secondAttribute="leadingMargin" constant="-8" id="Ccs-sR-xrw"/>
                                             <constraint firstItem="WFK-mZ-mxl" firstAttribute="centerX" secondItem="a5t-Eo-6F7" secondAttribute="centerX" id="MOE-i4-Nry"/>
                                             <constraint firstItem="WFK-mZ-mxl" firstAttribute="centerY" secondItem="a5t-Eo-6F7" secondAttribute="centerY" id="WhI-W4-Yfa"/>
+                                            <constraint firstAttribute="trailingMargin" secondItem="8XJ-Kl-Ix2" secondAttribute="trailing" constant="-8" id="YNi-ST-GTT"/>
+                                            <constraint firstAttribute="bottomMargin" secondItem="8XJ-Kl-Ix2" secondAttribute="bottom" constant="-8" id="hxR-dS-nAg"/>
+                                            <constraint firstItem="8XJ-Kl-Ix2" firstAttribute="top" secondItem="a5t-Eo-6F7" secondAttribute="topMargin" constant="-8" id="ntq-HL-Hsz"/>
                                         </constraints>
                                         <connections>
                                             <outlet property="activityIndicator" destination="WFK-mZ-mxl" id="T2l-gg-4RP"/>
+                                            <outlet property="imageView" destination="8XJ-Kl-Ix2" id="HgM-Ys-XRG"/>
                                         </connections>
                                     </collectionViewCell>
                                 </cells>

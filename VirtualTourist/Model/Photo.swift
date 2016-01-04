@@ -13,11 +13,14 @@ class Photo : NSManagedObject {
     
     struct Keys
     {
-        static let ImagePath = FlickrClient.JSONResponseKeys.PHOTO_URL
+        static let ImageURL = FlickrClient.JSONResponseKeys.PHOTO_URL
+        static let ImagePath = "path"
         static let Title = FlickrClient.JSONResponseKeys.TITLE
+        static let Location = "location"
     }
     
     @NSManaged var url_m: String
+    @NSManaged var path: String?
     @NSManaged var title: String
     @NSManaged var location: Location?
     
@@ -39,19 +42,25 @@ class Photo : NSManagedObject {
         
         // After the Core Data work has been taken care of we can init the properties from the
         // dictionary. This works in the same way that it did before we started on Core Data
-        url_m = dictionary[Keys.ImagePath] as! String
+        url_m = dictionary[Keys.ImageURL] as! String
+        path = dictionary[Keys.ImagePath] as? String
         title = dictionary[Keys.Title] as! String
+        location = dictionary[Keys.Location] as? Location
     }
     
     //given an array of dictionaries, convert them to an array of Student Location result objects
-    static func photosFromResults(results: [[String : AnyObject]]) -> [Photo]
+    static func photosFromResults(results: [[String : AnyObject]], location: Location) -> [Photo]
     {
         var photos = [Photo]()
         
         for result in results
         {
+            //format the image path
+            let imageURL = NSURL(string: result[Keys.ImageURL] as! String)!
+            let imagePath = "/\(imageURL.lastPathComponent!)" ?? ""
+            
             //for now I'm just saving the image title and url
-            let filteredResult: [String: AnyObject] = [Keys.Title: result[Keys.Title]!, Keys.ImagePath: result[Keys.ImagePath]!]
+            let filteredResult: [String: AnyObject] = [Keys.Title: result[Keys.Title]!, Keys.ImageURL: result[Keys.ImageURL]!, Keys.ImagePath: imagePath, Keys.Location: location]
             //print("photosFromResults -----------------\n\(filteredResult)\n")
             photos.append(Photo(dictionary: filteredResult, context: CoreDataStackManager.sharedInstance().managedObjectContext))
         }
@@ -59,14 +68,16 @@ class Photo : NSManagedObject {
         return photos
     }
     
-    /*var image: UIImage? {
+    var photoImage: UIImage? {
         
-        get {
-            return TheMovieDB.Caches.imageCache.imageWithIdentifier(posterPath)
+        get
+        {
+            return FlickrClient.Caches.imageCache.imageWithIdentifier(path)
         }
         
-        set {
-            TheMovieDB.Caches.imageCache.storeImage(newValue, withIdentifier: posterPath!)
+        set
+        {
+            FlickrClient.Caches.imageCache.storeImage(newValue, withIdentifier: path!)
         }
-    }*/
+    }
 }

@@ -27,7 +27,7 @@ class FlickrClient : NSObject {
     {
         //build the url and configure the request
         let urlString = FlickrClient.Constants.BASE_URL + FlickrClient.escapedParameters(parameters)
-        print("attempting to request the following url:\n  \(urlString)")
+        //print("attempting to request the following url:\n  \(urlString)")
         let url = NSURL(string: urlString)!
         let request = NSURLRequest(URL: url)
         
@@ -124,5 +124,11 @@ class FlickrClient : NSObject {
         }
         
         return Singleton.sharedInstance
+    }
+    
+    //MARK --- Shared Image Cache
+    struct Caches
+    {
+        static let imageCache = ImageCache()
     }
 }

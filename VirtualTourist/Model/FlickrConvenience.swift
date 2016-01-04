@@ -13,11 +13,11 @@ extension FlickrClient {
     
     //MARK: Student Location Methods
     
-    func getPhotos(latitude: Double, longitude: Double, completionHandler: (result: [Photo]?, error: NSError?) -> Void)
+    func getPhotos(pin: Location, completionHandler: (result: [Photo]?, error: NSError?) -> Void)
     {
         //specify parameters and method
-        let validLat = validLatitude(latitude)
-        let validLon = validLongitude(longitude)
+        let validLat = validLatitude(pin.latitude)
+        let validLon = validLongitude(pin.longitude)
         
         if (validLat && validLon)
         {
@@ -25,7 +25,7 @@ extension FlickrClient {
             let parameters = [
                 FlickrClient.MethodArgumentKeys.METHOD_NAME: FlickrClient.Methods.SEARCH,
                 FlickrClient.MethodArgumentKeys.API_KEY: FlickrClient.Constants.FLICKR_API_KEY,
-                FlickrClient.MethodArgumentKeys.BOUNDING_BOX:   createBoundingBoxString(latitude, longitude: longitude),
+                FlickrClient.MethodArgumentKeys.BOUNDING_BOX:   createBoundingBoxString(pin.latitude, longitude: pin.longitude),
                 FlickrClient.MethodArgumentKeys.EXTRAS: FlickrClient.MethodArguments.EXTRAS,
                 FlickrClient.MethodArgumentKeys.FORMAT: FlickrClient.MethodArguments.FORMAT,
                 FlickrClient.MethodArgumentKeys.NO_JSON_CALLBACK: FlickrClient.MethodArgumentKeys.NO_JSON_CALLBACK,
@@ -72,7 +72,7 @@ extension FlickrClient {
                                                 if let photoArray = photos.valueForKey("photo") as? [[String : AnyObject]]
                                                 {
                                                     print("Successfully found photos from Flickr")
-                                                    let photos = Photo.photosFromResults(photoArray)
+                                                    let photos = Photo.photosFromResults(photoArray, location: pin)
                                                     FlickrClient.sharedInstance().photos = photos
                                                     
                                                     completionHandler(result: photos, error: nil)
