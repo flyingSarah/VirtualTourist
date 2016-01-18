@@ -53,16 +53,50 @@ class Photo : NSManagedObject {
     {
         var photos = [Photo]()
         
+        //find out how many picture I can download from the results
+        var maxResults = FlickrClient.Constants.MAX_TOTAL_IMAGES
+        var countResults = 0
+        //I don't want to just be limited to only the first group of the page
+        var startCount = 0
+        
+        if(results.count < maxResults)
+        {
+            maxResults = results.count
+        }
+        else
+        {
+            startCount = Int(arc4random_uniform(UInt32(results.count - maxResults)))
+        }
+        
+        //print("results count: \(results.count) \(startCount)")
+        
         for result in results
         {
-            //format the image path
-            let imageURL = NSURL(string: result[Keys.ImageURL] as! String)!
-            let imagePath = "/\(imageURL.lastPathComponent!)" ?? ""
+            if(countResults < (maxResults + startCount) && countResults >= startCount)
+            {
+                //format the image path
+                if let imageURL = NSURL(string: result[Keys.ImageURL] as! String)
+                {
+                    let imagePath = "/\(imageURL.lastPathComponent!)" ?? ""
+                    
+                    //for now I'm just saving the image title and url
+                    let filteredResult: [String: AnyObject] = [Keys.Title: result[Keys.Title]!, Keys.ImageURL: result[Keys.ImageURL]!, Keys.ImagePath: imagePath, Keys.Location: location]
+                    //print("photosFromResults -----------------\n\(filteredResult)\n")
+                    
+                    dispatch_async(dispatch_get_main_queue()) {
+                        
+                        photos.append(Photo(dictionary: filteredResult, context: CoreDataStackManager.sharedInstance().managedObjectContext))
+                        print("added photos object to the context: \(photos.count)")
+                    }
+                    
+                }
+                else
+                {
+                    print("FROM PHOTO RESULTS: photo url could not be converted to NSURL")
+                }
+            }
             
-            //for now I'm just saving the image title and url
-            let filteredResult: [String: AnyObject] = [Keys.Title: result[Keys.Title]!, Keys.ImageURL: result[Keys.ImageURL]!, Keys.ImagePath: imagePath, Keys.Location: location]
-            //print("photosFromResults -----------------\n\(filteredResult)\n")
-            photos.append(Photo(dictionary: filteredResult, context: CoreDataStackManager.sharedInstance().managedObjectContext))
+            countResults++
         }
         
         return photos

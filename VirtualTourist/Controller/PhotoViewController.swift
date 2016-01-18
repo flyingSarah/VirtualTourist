@@ -16,12 +16,15 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var mapView: MKMapView!
+    @IBOutlet weak var bottomButton: UIBarButtonItem!
     
     //MARK --- Useful Variables
     
     var thisPin: Location!
     
     var blockOperations: [NSBlockOperation] = []
+    
+    //var photosAreReady: Bool? = nil
     
     //MARK --- Lifecycle
     
@@ -33,15 +36,17 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         collectionView.delegate = self
         collectionView.dataSource = self
+        fetchedResultsController.delegate = self
         
         //perform the fetch for the core data we need to access
         do
         {
-            try fetchedResultsController.performFetch()
+            try self.fetchedResultsController.performFetch()
         }
-        catch {}
-        
-        fetchedResultsController.delegate = self
+        catch
+        {
+            NSLog("could not perform fetch: \(error)")
+        }
     }
     
     override func viewWillAppear(animated: Bool)
@@ -54,7 +59,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         }
         else
         {
-            print("the photos array wasn't empty \(thisPin.photos.count)")
+            print("the photos array wasn't empty")
         }
     }
     
@@ -66,6 +71,36 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             operation.cancel()
         }
         blockOperations.removeAll(keepCapacity: false)
+    }
+    
+    //MARK --- Refresh and/or Delete Behavior
+    
+    @IBAction func bottomButtonTriggered(sender: UIBarButtonItem)
+    {
+        if(sender.title == "New Collection")
+        {
+            getNewCollection()
+        }
+    }
+    
+    func getNewCollection()
+    {
+        if let fetchedObjects = self.fetchedResultsController.fetchedObjects
+        {
+            for object in fetchedObjects
+            {
+                let photo = object as! Photo
+                self.sharedContext.deleteObject(photo)
+            }
+            CoreDataStackManager.sharedInstance().saveContext()
+            print("delete the objects")
+        }
+        else
+        {
+            print("no fetched objects")
+        }
+        
+        findPhotos(thisPin)
     }
     
     //MARK --- Core Data
@@ -153,6 +188,11 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                     this.collectionView.moveItemAtIndexPath(indexPath!, toIndexPath: newIndexPath!)
                 }}))
         }
+        
+        /*dispatch_async(dispatch_get_main_queue()) {
+            
+            CoreDataStackManager.sharedInstance().saveContext()
+        }*/
     }
     
     func controllerDidChangeContent(controller: NSFetchedResultsController)
@@ -174,32 +214,42 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
     {
-        let cellCount = fetchedResultsController.sections![section].numberOfObjects
-        //print("number of items in section \(cellCount)")
+        let cellCount = self.fetchedResultsController.sections![section].numberOfObjects
+        print("cell count in collection view: \(cellCount)")
+
         return cellCount
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell
     {
-        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
-        
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("photoCell", forIndexPath: indexPath) as! PhotoViewCell
+        cell.activityIndicator.hidesWhenStopped = true
         
-        configureCell(cell, photo: photo)
+        if(thisPin.isGettingPhotos)
+        {
+            cell.imageView.image = UIImage(named: "photoDownloading")
+            cell.activityIndicator.startAnimating()
+        }
+        else
+        {
+            let photo = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+            self.configureCell(cell, photo: photo)
+            cell.activityIndicator.stopAnimating()
+        }
         
         return cell
     }
     
     func configureCell(cell: PhotoViewCell, photo: Photo)
     {
-        var image = UIImage(named: "photoPlaceHolder")
+        var image = UIImage(named: "photoNotFound")
         
         cell.imageView.image = nil
         
         //set the photo image
         if(photo.path == nil || photo.path == "")
         {
-            image = UIImage(named: "noImage")
+            image = UIImage(named: "photoNotFound")
         }
         else if(photo.photoImage != nil)
         {
@@ -231,6 +281,15 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     func findPhotos(pin: Location)
     {
+        if(pin.isGettingPhotos)
+        {
+            return
+        }
+        else
+        {
+            pin.isGettingPhotos = true
+        }
+        
         //find the photos for the selected latitude and longitude
         FlickrClient.sharedInstance().getPhotos(pin) { result, error in
             
@@ -242,10 +301,13 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             {
                 dispatch_async(dispatch_get_main_queue()) {
                     
-                    self.collectionView.reloadData()
+                    CoreDataStackManager.sharedInstance().saveContext()
                 }
+            }
+            
+            dispatch_async(dispatch_get_main_queue()) {
                 
-                CoreDataStackManager.sharedInstance().saveContext()
+                pin.isGettingPhotos = false
             }
         }
     }

@@ -131,15 +131,46 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             
             mapView.addAnnotation(currentPin!)
         }
-        else if(recognizer.state == UIGestureRecognizerState.Changed)
-        {
-            currentPin!.latitude = pinLocation.latitude
-            currentPin!.longitude = pinLocation.longitude
-        }
         else if(recognizer.state == UIGestureRecognizerState.Ended)
         {
             //save context now that new pins have been added
             CoreDataStackManager.sharedInstance().saveContext()
+            
+            //pre-fetch photo
+            findPhotos(currentPin!)
+        }
+    }
+    
+    func findPhotos(pin: Location)
+    {
+        if(pin.isGettingPhotos)
+        {
+            return
+        }
+        else
+        {
+            pin.isGettingPhotos = true
+        }
+        
+        //find the photos for the selected latitude and longitude
+        FlickrClient.sharedInstance().getPhotos(pin) { result, error in
+            
+            if let error = error
+            {
+                print("error getting photos from lat/lon:\n  \(error.code)\n  \(error.localizedDescription)")
+            }
+            else
+            {
+                dispatch_async(dispatch_get_main_queue()) {
+                    
+                    CoreDataStackManager.sharedInstance().saveContext()
+                }
+            }
+            
+            dispatch_async(dispatch_get_main_queue()) {
+                
+                pin.isGettingPhotos = false
+            }
         }
     }
     

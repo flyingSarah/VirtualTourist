@@ -91,38 +91,50 @@
                                     <constraint firstAttribute="height" constant="120" id="4PQ-0K-DOj"/>
                                 </constraints>
                             </mapView>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ZkD-Sx-GfI">
+                                <rect key="frame" x="0.0" y="556" width="600" height="44"/>
+                                <items>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="SqZ-LS-lgg"/>
+                                    <barButtonItem title="New Collection" id="6Cc-Vt-gPP">
+                                        <connections>
+                                            <action selector="bottomButtonTriggered:" destination="5MR-gq-88c" id="H5q-6Q-IwV"/>
+                                        </connections>
+                                    </barButtonItem>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="Sec-Jn-7EI"/>
+                                </items>
+                            </toolbar>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="VB8-Qc-COH">
                                 <rect key="frame" x="0.0" y="182" width="600" height="374"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="OY7-bj-QLI">
-                                    <size key="itemSize" width="140" height="140"/>
+                                    <size key="itemSize" width="120" height="120"/>
                                     <size key="headerReferenceSize" width="0.0" height="0.0"/>
                                     <size key="footerReferenceSize" width="0.0" height="0.0"/>
                                     <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                 </collectionViewFlowLayout>
                                 <cells>
                                     <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="photoCell" id="a5t-Eo-6F7" customClass="PhotoViewCell" customModule="VirtualTourist" customModuleProvider="target">
-                                        <rect key="frame" x="0.0" y="0.0" width="140" height="140"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="120" height="120"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                            <rect key="frame" x="0.0" y="0.0" width="140" height="140"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="120" height="120"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="8XJ-Kl-Ix2">
-                                                    <rect key="frame" x="0.0" y="0.0" width="140" height="140"/>
+                                                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="8XJ-Kl-Ix2">
+                                                    <rect key="frame" x="0.0" y="0.0" width="120" height="120"/>
                                                 </imageView>
                                                 <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="WFK-mZ-mxl">
-                                                    <rect key="frame" x="60" y="60" width="20" height="20"/>
+                                                    <rect key="frame" x="50" y="50" width="20" height="20"/>
                                                 </activityIndicatorView>
                                             </subviews>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
                                         <constraints>
-                                            <constraint firstItem="8XJ-Kl-Ix2" firstAttribute="leading" secondItem="a5t-Eo-6F7" secondAttribute="leadingMargin" constant="-8" id="Ccs-sR-xrw"/>
-                                            <constraint firstItem="WFK-mZ-mxl" firstAttribute="centerX" secondItem="a5t-Eo-6F7" secondAttribute="centerX" id="MOE-i4-Nry"/>
-                                            <constraint firstItem="WFK-mZ-mxl" firstAttribute="centerY" secondItem="a5t-Eo-6F7" secondAttribute="centerY" id="WhI-W4-Yfa"/>
-                                            <constraint firstAttribute="trailingMargin" secondItem="8XJ-Kl-Ix2" secondAttribute="trailing" constant="-8" id="YNi-ST-GTT"/>
-                                            <constraint firstAttribute="bottomMargin" secondItem="8XJ-Kl-Ix2" secondAttribute="bottom" constant="-8" id="hxR-dS-nAg"/>
-                                            <constraint firstItem="8XJ-Kl-Ix2" firstAttribute="top" secondItem="a5t-Eo-6F7" secondAttribute="topMargin" constant="-8" id="ntq-HL-Hsz"/>
+                                            <constraint firstAttribute="trailingMargin" secondItem="8XJ-Kl-Ix2" secondAttribute="trailing" constant="-8" id="6w0-Fv-iMG"/>
+                                            <constraint firstAttribute="bottomMargin" secondItem="8XJ-Kl-Ix2" secondAttribute="bottom" constant="-8" id="Efq-l5-ONC"/>
+                                            <constraint firstItem="WFK-mZ-mxl" firstAttribute="centerY" secondItem="8XJ-Kl-Ix2" secondAttribute="centerY" id="K7t-6Y-Pue"/>
+                                            <constraint firstItem="8XJ-Kl-Ix2" firstAttribute="top" secondItem="a5t-Eo-6F7" secondAttribute="topMargin" constant="-8" id="LCX-5O-dYb"/>
+                                            <constraint firstItem="8XJ-Kl-Ix2" firstAttribute="leading" secondItem="a5t-Eo-6F7" secondAttribute="leadingMargin" constant="-8" id="hTG-ib-oX1"/>
+                                            <constraint firstItem="WFK-mZ-mxl" firstAttribute="centerX" secondItem="8XJ-Kl-Ix2" secondAttribute="centerX" id="wOd-Ik-t8x"/>
                                         </constraints>
                                         <connections>
                                             <outlet property="activityIndicator" destination="WFK-mZ-mxl" id="T2l-gg-4RP"/>
@@ -131,14 +143,6 @@
                                     </collectionViewCell>
                                 </cells>
                             </collectionView>
-                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ZkD-Sx-GfI">
-                                <rect key="frame" x="0.0" y="556" width="600" height="44"/>
-                                <items>
-                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="SqZ-LS-lgg"/>
-                                    <barButtonItem title="New Collection" id="6Cc-Vt-gPP"/>
-                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="Sec-Jn-7EI"/>
-                                </items>
-                            </toolbar>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
@@ -157,6 +161,7 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="bottomButton" destination="6Cc-Vt-gPP" id="4KY-xH-E1h"/>
                         <outlet property="collectionView" destination="VB8-Qc-COH" id="Iwa-Ck-nWx"/>
                         <outlet property="mapView" destination="i5P-qD-jni" id="RNY-oi-fB8"/>
                     </connections>
