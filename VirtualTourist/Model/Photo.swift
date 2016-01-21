@@ -86,7 +86,7 @@ class Photo : NSManagedObject {
                     dispatch_async(dispatch_get_main_queue()) {
                         
                         photos.append(Photo(dictionary: filteredResult, context: CoreDataStackManager.sharedInstance().managedObjectContext))
-                        print("added photos object to the context: \(photos.count)")
+                        //print("added photos object to the context: \(photos.count)")
                     }
                     
                 }

@@ -215,7 +215,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
     {
         let cellCount = self.fetchedResultsController.sections![section].numberOfObjects
-        print("cell count in collection view: \(cellCount)")
+        //print("cell count in collection view: \(cellCount)")
 
         return cellCount
     }
@@ -242,18 +242,14 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     func configureCell(cell: PhotoViewCell, photo: Photo)
     {
-        var image = UIImage(named: "photoNotFound")
-        
-        cell.imageView.image = nil
-        
         //set the photo image
         if(photo.path == nil || photo.path == "")
         {
-            image = UIImage(named: "photoNotFound")
+            cell.imageView.image = UIImage(named: "photoNotFound")
         }
         else if(photo.photoImage != nil)
         {
-            image = photo.photoImage
+            cell.imageView.image = photo.photoImage
         }
         else // in this case the path is named but not yet downloaded
         {
@@ -265,7 +261,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                     let foundImage = UIImage(data: imageData)
                     
                     photo.photoImage = foundImage
-                    image = foundImage
+                    cell.imageView.image = foundImage
                 }
             }
             else
@@ -273,8 +269,6 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                 print("NSURL could not make a URL from photo.url_m")
             }
         }
-        
-        cell.imageView.image = image
     }
     
     //MARK --- Photo Client Stuff
