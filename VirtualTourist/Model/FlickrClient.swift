@@ -14,7 +14,7 @@ class FlickrClient : NSObject {
     var session: NSURLSession
     
     //shared student location arrays
-    var photos = [Photo]()
+    var photos = NSSet()
     
     override init()
     {

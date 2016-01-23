@@ -17,12 +17,16 @@ class Photo : NSManagedObject {
         static let ImagePath = "path"
         static let Title = FlickrClient.JSONResponseKeys.TITLE
         static let Location = "location"
+        static let IsDownloading = "isDownloading"
     }
     
     @NSManaged var url_m: String
     @NSManaged var path: String?
     @NSManaged var title: String
     @NSManaged var location: Location?
+    @NSManaged var isDownloading: Bool
+    
+    //var loadUpdateHandler: (() -> Void)?
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
@@ -46,12 +50,13 @@ class Photo : NSManagedObject {
         path = dictionary[Keys.ImagePath] as? String
         title = dictionary[Keys.Title] as! String
         location = dictionary[Keys.Location] as? Location
+        isDownloading = false
     }
     
     //given an array of dictionaries, convert them to an array of Student Location result objects
-    static func photosFromResults(results: [[String : AnyObject]], location: Location) -> [Photo]
+    static func photosFromResults(results: [[String : AnyObject]], location: Location) -> NSSet
     {
-        var photos = [Photo]()
+        var photos = NSSet()
         
         //find out how many picture I can download from the results
         var maxResults = FlickrClient.Constants.MAX_TOTAL_IMAGES
@@ -68,8 +73,6 @@ class Photo : NSManagedObject {
             startCount = Int(arc4random_uniform(UInt32(results.count - maxResults)))
         }
         
-        //print("results count: \(results.count) \(startCount)")
-        
         for result in results
         {
             if(countResults < (maxResults + startCount) && countResults >= startCount)
@@ -80,13 +83,12 @@ class Photo : NSManagedObject {
                     let imagePath = "/\(imageURL.lastPathComponent!)" ?? ""
                     
                     //for now I'm just saving the image title and url
-                    let filteredResult: [String: AnyObject] = [Keys.Title: result[Keys.Title]!, Keys.ImageURL: result[Keys.ImageURL]!, Keys.ImagePath: imagePath, Keys.Location: location]
-                    //print("photosFromResults -----------------\n\(filteredResult)\n")
+                    let filteredResult: [String: AnyObject] = [Keys.Title: result[Keys.Title]!, Keys.ImageURL: result[Keys.ImageURL]!, Keys.ImagePath: imagePath, Keys.Location: location, Keys.IsDownloading: true]
                     
                     dispatch_async(dispatch_get_main_queue()) {
                         
-                        photos.append(Photo(dictionary: filteredResult, context: CoreDataStackManager.sharedInstance().managedObjectContext))
-                        //print("added photos object to the context: \(photos.count)")
+                        print("photo \(photos.count) will download")
+                        photos = photos.setByAddingObject(Photo(dictionary: filteredResult, context: CoreDataStackManager.sharedInstance().managedObjectContext))
                     }
                     
                 }
@@ -112,6 +114,9 @@ class Photo : NSManagedObject {
         set
         {
             FlickrClient.Caches.imageCache.storeImage(newValue, withIdentifier: path!)
+            print("not downloading anymore")
+            isDownloading = false
+            //loadUpdateHandler?()
         }
     }
 }

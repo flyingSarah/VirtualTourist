@@ -22,8 +22,8 @@ class Location : NSManagedObject, MKAnnotation {
     
     @NSManaged var latitude: Double
     @NSManaged var longitude: Double
-    @NSManaged var photos: [Photo]
-    @NSManaged var isGettingPhotos: Bool
+    @NSManaged var photos: NSSet
+    @NSManaged var alreadyGotPhotos: Bool
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
@@ -45,12 +45,14 @@ class Location : NSManagedObject, MKAnnotation {
         // dictionary. This works in the same way that it did before we started on Core Data
         self.latitude = latitude
         self.longitude = longitude
-        isGettingPhotos = false
+        alreadyGotPhotos = false
     }
     
     //I set this up based dimitrios_108861's solution from this discussion thread: https://discussions.udacity.com/t/virtual-tourist-dragging-a-pin/28906/8
     var coordinate: CLLocationCoordinate2D {
-        set(newValue) {
+        
+        set(newValue)
+        {
             latitude = newValue.latitude
             longitude = newValue.longitude
         }

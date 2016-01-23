@@ -13,7 +13,7 @@ extension FlickrClient {
     
     //MARK: Student Location Methods
     
-    func getPhotos(pin: Location, completionHandler: (result: [Photo]?, error: NSError?) -> Void)
+    func getPhotos(pin: Location, completionHandler: (result: NSSet?, error: NSError?) -> Void)
     {
         //specify parameters and method
         let validLat = validLatitude(pin.latitude)
@@ -80,7 +80,6 @@ extension FlickrClient {
                                                 else
                                                 {
                                                     completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find photo key from Flickr result"]))
-                                                    //println("nothing matches the photo key")
                                                 }
                                             }
                                         }
@@ -96,10 +95,6 @@ extension FlickrClient {
                         {
                             completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find total pages key from Flickr result"]))
                         }
-                        
-                        //let locations = StudentLocation.locationsFromResults(results)
-                        
-                        //completionHandler(result: locations, error: nil)
                     }
                     else
                     {

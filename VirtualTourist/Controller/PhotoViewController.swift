@@ -17,14 +17,19 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var bottomButton: UIBarButtonItem!
+    @IBOutlet weak var noPhotosFound: UIImageView!
     
     //MARK --- Useful Variables
     
     var thisPin: Location!
     
-    var blockOperations: [NSBlockOperation] = []
+    // The selected indexes array keeps all of the indexPaths for cells that are "selected".
+    var selectedIndexes = [NSIndexPath]()
     
-    //var photosAreReady: Bool? = nil
+    // Keep the changes. We will keep track of insertions, deletions, and updates.
+    var insertedIndexPaths: [NSIndexPath]!
+    var deletedIndexPaths: [NSIndexPath]!
+    var updatedIndexPaths: [NSIndexPath]!
     
     //MARK --- Lifecycle
     
@@ -53,24 +58,17 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     {
         super.viewWillAppear(animated)
         
-        if(thisPin.photos.isEmpty)
+        noPhotosFound.hidden = true
+        
+        if(!thisPin.alreadyGotPhotos)
         {
+            print("this pin doesn't already have its photos")
             findPhotos(thisPin)
         }
         else
         {
-            print("the photos array wasn't empty")
+            print("this pin already has its photos")
         }
-    }
-    
-    override func viewWillDisappear(animated: Bool)
-    {
-        //cancel all block operations when the view controller is exited
-        for operation: NSBlockOperation in blockOperations
-        {
-            operation.cancel()
-        }
-        blockOperations.removeAll(keepCapacity: false)
     }
     
     //MARK --- Refresh and/or Delete Behavior
@@ -131,83 +129,48 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     func controllerWillChangeContent(controller: NSFetchedResultsController)
     {
-        blockOperations.removeAll(keepCapacity: false)
-    }
-    
-    func controller(controller: NSFetchedResultsController, didChangeSection sectionInfo: NSFetchedResultsSectionInfo, atIndex sectionIndex: Int, forChangeType type: NSFetchedResultsChangeType)
-    {
-        switch type {
-        case .Insert:
-            blockOperations.append(NSBlockOperation(block: { [weak self] in
-                
-                if let this = self
-                {
-                    this.collectionView.insertSections(NSIndexSet(index: sectionIndex))
-                }}))
-        case .Delete:
-            blockOperations.append(NSBlockOperation(block: { [weak self] in
-                
-                if let this = self
-                {
-                    this.collectionView.deleteSections(NSIndexSet(index: sectionIndex))
-                }}))
-        default:
-            return
-        }
+        // We are about to handle some new changes. Start out with empty arrays for each change type
+        insertedIndexPaths = [NSIndexPath]()
+        deletedIndexPaths = [NSIndexPath]()
+        updatedIndexPaths = [NSIndexPath]()
+        
+        print("the fetched results will change the content")
     }
     
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?)
     {
         switch type {
         case .Insert:
-            blockOperations.append(NSBlockOperation(block: { [weak self] in
-                
-                if let this = self
-                {
-                    this.collectionView.insertItemsAtIndexPaths([newIndexPath!])
-                }}))
+            insertedIndexPaths.append(newIndexPath!)
+            break
         case .Delete:
-            blockOperations.append(NSBlockOperation(block: { [weak self] in
-                
-                if let this = self
-                {
-                    this.collectionView.deleteItemsAtIndexPaths([indexPath!])
-                }}))
+            deletedIndexPaths.append(indexPath!)
+            break
         case .Update:
-            blockOperations.append(NSBlockOperation(block: { [weak self] in
-                
-                if let this = self
-                {
-                    this.collectionView.reloadItemsAtIndexPaths([indexPath!])
-                }}))
+            updatedIndexPaths.append(indexPath!)
+            break
         case .Move:
-            blockOperations.append(NSBlockOperation(block: { [weak self] in
-                
-                if let this = self
-                {
-                    this.collectionView.moveItemAtIndexPath(indexPath!, toIndexPath: newIndexPath!)
-                }}))
+            print("Move an item. We don't expect to see this in this app.")
+            break
         }
-        
-        /*dispatch_async(dispatch_get_main_queue()) {
-            
-            CoreDataStackManager.sharedInstance().saveContext()
-        }*/
     }
     
     func controllerDidChangeContent(controller: NSFetchedResultsController)
     {
         collectionView.performBatchUpdates({ () -> Void in
             
-            for operation: NSBlockOperation in self.blockOperations
-            {
-                operation.start()
-            }},
+            for indexPath in self.insertedIndexPaths {
+                self.collectionView.insertItemsAtIndexPaths([indexPath])
+            }
             
-            completion: { (finished) -> Void in
-                
-                self.blockOperations.removeAll(keepCapacity: false)
-        })
+            for indexPath in self.deletedIndexPaths {
+                self.collectionView.deleteItemsAtIndexPaths([indexPath])
+            }
+            
+            for indexPath in self.updatedIndexPaths {
+                self.collectionView.reloadItemsAtIndexPaths([indexPath])
+            }
+        }, completion: nil)
     }
     
     //MARK --- Collection View
@@ -215,7 +178,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
     {
         let cellCount = self.fetchedResultsController.sections![section].numberOfObjects
-        //print("cell count in collection view: \(cellCount)")
+        print("cell count in collection view: \(cellCount)")
 
         return cellCount
     }
@@ -225,48 +188,63 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("photoCell", forIndexPath: indexPath) as! PhotoViewCell
         cell.activityIndicator.hidesWhenStopped = true
         
-        if(thisPin.isGettingPhotos)
-        {
-            cell.imageView.image = UIImage(named: "photoDownloading")
-            cell.activityIndicator.startAnimating()
-        }
-        else
-        {
-            let photo = self.fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
-            self.configureCell(cell, photo: photo)
-            cell.activityIndicator.stopAnimating()
-        }
+        configureCell(cell, atIndexPath: indexPath)
         
         return cell
     }
     
-    func configureCell(cell: PhotoViewCell, photo: Photo)
+    func configureCell(cell: PhotoViewCell, atIndexPath indexPath: NSIndexPath)
     {
-        //set the photo image
-        if(photo.path == nil || photo.path == "")
+        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+        
+        if let image = photo.photoImage
         {
-            cell.imageView.image = UIImage(named: "photoNotFound")
+            print("cell \(indexPath.item) already had the photo")
+            //photo.loadUpdateHandler = nil
+            self.noPhotosFound.hidden = true
+            cell.imageView.image = image
+            cell.activityIndicator.stopAnimating()
         }
-        else if(photo.photoImage != nil)
+        else
         {
-            cell.imageView.image = photo.photoImage
-        }
-        else // in this case the path is named but not yet downloaded
-        {
-            //print("path is named but not yet downloaded")
-            if let imageURL = NSURL(string: photo.url_m)
+            noPhotosFound.hidden = true
+            
+            print("cell \(indexPath.item) is getting the photo")
+            
+            if(photo.isDownloading)
             {
-                if let imageData = NSData(contentsOfURL: imageURL)
-                {
-                    let foundImage = UIImage(data: imageData)
-                    
-                    photo.photoImage = foundImage
-                    cell.imageView.image = foundImage
-                }
+                cell.imageView.image = UIImage(named: "photoDownloading")
+                cell.activityIndicator.startAnimating()
+                
+                /*photo.loadUpdateHandler = { [unowned self] () -> Void in
+                    dispatch_async(dispatch_get_main_queue(), {
+                        self.collectionView.reloadItemsAtIndexPaths([indexPath])
+                    })
+                }*/
             }
             else
             {
-                print("NSURL could not make a URL from photo.url_m")
+                if let imageURL = NSURL(string: photo.url_m)
+                {
+                    if let imageData = NSData(contentsOfURL: imageURL)
+                    {
+                        let foundImage = UIImage(data: imageData)
+                        
+                        photo.photoImage = foundImage
+                        
+                        //photo.loadUpdateHandler = nil
+                        dispatch_async(dispatch_get_main_queue()) {
+                            
+                            print("cell \(indexPath.item) will display the photo")
+                            cell.imageView.image = foundImage
+                            cell.activityIndicator.stopAnimating()
+                        }
+                    }
+                }
+                else
+                {
+                    print("NSURL could not make a URL from photo.url_m")
+                }
             }
         }
     }
@@ -275,14 +253,9 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     func findPhotos(pin: Location)
     {
-        if(pin.isGettingPhotos)
-        {
-            return
-        }
-        else
-        {
-            pin.isGettingPhotos = true
-        }
+        pin.alreadyGotPhotos = true
+        
+        print("findPhotos is getting photos")
         
         //find the photos for the selected latitude and longitude
         FlickrClient.sharedInstance().getPhotos(pin) { result, error in
@@ -290,18 +263,17 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             if let error = error
             {
                 print("error getting photos from lat/lon:\n  \(error.code)\n  \(error.localizedDescription)")
+                dispatch_async(dispatch_get_main_queue()) {
+                    self.noPhotosFound.hidden = false
+                }
             }
             else
             {
                 dispatch_async(dispatch_get_main_queue()) {
                     
+                    print("results saving...")
                     CoreDataStackManager.sharedInstance().saveContext()
                 }
-            }
-            
-            dispatch_async(dispatch_get_main_queue()) {
-                
-                pin.isGettingPhotos = false
             }
         }
     }

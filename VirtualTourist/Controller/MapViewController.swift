@@ -137,11 +137,11 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             CoreDataStackManager.sharedInstance().saveContext()
             
             //pre-fetch photo
-            findPhotos(currentPin!)
+            //findPhotos(currentPin!)
         }
     }
     
-    func findPhotos(pin: Location)
+    /*func findPhotos(pin: Location)
     {
         if(pin.isGettingPhotos)
         {
@@ -163,6 +163,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             {
                 dispatch_async(dispatch_get_main_queue()) {
                     
+                    print("saved context after getting photos from map view")
                     CoreDataStackManager.sharedInstance().saveContext()
                 }
             }
@@ -172,7 +173,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 pin.isGettingPhotos = false
             }
         }
-    }
+    }*/
     
     //MARK --- Map View Delegate
     
