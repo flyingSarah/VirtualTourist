@@ -26,7 +26,7 @@ class Photo : NSManagedObject {
     @NSManaged var location: Location?
     @NSManaged var isDownloading: Bool
     
-    //var loadUpdateHandler: (() -> Void)?
+    var loadUpdateHandler: (() -> Void)?
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
@@ -56,6 +56,7 @@ class Photo : NSManagedObject {
     //given an array of dictionaries, convert them to an array of Student Location result objects
     static func photosFromResults(results: [[String : AnyObject]], location: Location) -> NSSet
     {
+        print("checkpoint")
         var photos = NSSet()
         
         //find out how many picture I can download from the results
@@ -116,7 +117,7 @@ class Photo : NSManagedObject {
             FlickrClient.Caches.imageCache.storeImage(newValue, withIdentifier: path!)
             print("not downloading anymore")
             isDownloading = false
-            //loadUpdateHandler?()
+            loadUpdateHandler?()
         }
     }
 }

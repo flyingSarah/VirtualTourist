@@ -213,14 +213,9 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             
             if(photo.isDownloading)
             {
+                //photo.loadUpdateHandler = nil
                 cell.imageView.image = UIImage(named: "photoDownloading")
                 cell.activityIndicator.startAnimating()
-                
-                /*photo.loadUpdateHandler = { [unowned self] () -> Void in
-                    dispatch_async(dispatch_get_main_queue(), {
-                        self.collectionView.reloadItemsAtIndexPaths([indexPath])
-                    })
-                }*/
             }
             else
             {
@@ -230,9 +225,13 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                     {
                         let foundImage = UIImage(data: imageData)
                         
+                        /*photo.loadUpdateHandler = { [unowned self] () -> Void in
+                        dispatch_async(dispatch_get_main_queue(), {
+                        self.collectionView.reloadItemsAtIndexPaths([indexPath])
+                        })
+                        }*/
                         photo.photoImage = foundImage
                         
-                        //photo.loadUpdateHandler = nil
                         dispatch_async(dispatch_get_main_queue()) {
                             
                             print("cell \(indexPath.item) will display the photo")

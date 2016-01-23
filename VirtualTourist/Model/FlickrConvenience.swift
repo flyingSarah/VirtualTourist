@@ -61,26 +61,76 @@ extension FlickrClient {
                                 }
                                 else
                                 {
-                                    if let photos = pageAddedJSONResult.valueForKey(FlickrClient.JSONResponseKeys.PHOTOS) as? NSDictionary
+                                    if let photosDictionary = pageAddedJSONResult.valueForKey(FlickrClient.JSONResponseKeys.PHOTOS) as? NSDictionary
                                     {
-                                        if let totalPhotosString = photos.valueForKey(FlickrClient.JSONResponseKeys.TOTAL) as? String
+                                        if let totalPhotosString = photosDictionary.valueForKey(FlickrClient.JSONResponseKeys.TOTAL) as? String
                                         {
                                             let totalPhotos = Int(totalPhotosString)
                                             
                                             if(totalPhotos > 0)
                                             {
-                                                if let photoArray = photos.valueForKey("photo") as? [[String : AnyObject]]
+                                                if let photoArray = photosDictionary.valueForKey("photo") as? [[String : AnyObject]]
                                                 {
-                                                    print("Successfully found photos from Flickr")
-                                                    let photos = Photo.photosFromResults(photoArray, location: pin)
-                                                    FlickrClient.sharedInstance().photos = photos
-                                                    
-                                                    completionHandler(result: photos, error: nil)
+                                                    if(photoArray.count > 0)
+                                                    {
+                                                        print("Successfully found \(photoArray.count) photos from Flickr")
+                                                        
+                                                        let photos = Photo.photosFromResults(photoArray, location: pin)
+                                                        FlickrClient.sharedInstance().photos = photos
+                                                        
+                                                        completionHandler(result: photos, error: nil)
+                                                    }
+                                                    else
+                                                    {
+                                                        //I noticed that sometimes Flickr returns an empty photo array when I use the page parameter to search.  After much testing I decided it must be a Flickr bug so I decided to just get Page 1's results in those cases so that I will always be able to display photos if there are any to display.
+                                                        
+                                                        if let totalPageOnePhotosString = results.valueForKey(FlickrClient.JSONResponseKeys.TOTAL) as? String
+                                                        {
+                                                            let totalPageOnePhotos = Int(totalPageOnePhotosString)
+                                                            
+                                                            if(totalPageOnePhotos > 0)
+                                                            {
+                                                                if let pageOnePhotoArray = results.valueForKey("photo") as? [[String : AnyObject]]
+                                                                {
+                                                                    if(pageOnePhotoArray.count > 1)
+                                                                    {
+                                                                        print("Successfully found \(pageOnePhotoArray.count) photos from Page 1 of Flickr results")
+                                                                        
+                                                                        let photos = Photo.photosFromResults(pageOnePhotoArray, location: pin)
+                                                                        FlickrClient.sharedInstance().photos = photos
+                                                                        
+                                                                        completionHandler(result: photos, error: nil)
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Photos array was empty on Page 1 of Flickr Results"]))
+                                                                    }
+                                                                    
+                                                                }
+                                                                else
+                                                                {
+                                                                    completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find photo key from Page 1 of Flickr result"]))
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Found 0 photos from Page 1 of Flickr result"]))
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find total photos key from Page 1 of Flickr result"]))
+                                                        }
+                                                    }
                                                 }
                                                 else
                                                 {
                                                     completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find photo key from Flickr result"]))
                                                 }
+                                            }
+                                            else
+                                            {
+                                                completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Found 0 photos from Flickr result"]))
                                             }
                                         }
                                         else
