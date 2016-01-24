@@ -111,7 +111,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         let fetchRequest = NSFetchRequest(entityName: "Photo")
         
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "uniqueId", ascending: true)]
         fetchRequest.predicate = NSPredicate(format: "location == %@", self.thisPin)
         
         let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
@@ -178,7 +178,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
     {
         let cellCount = self.fetchedResultsController.sections![section].numberOfObjects
-        print("cell count in collection view: \(cellCount)")
+        //print("cell count in collection view: \(cellCount)")
 
         return cellCount
     }
@@ -199,8 +199,11 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         if let image = photo.photoImage
         {
-            print("cell \(indexPath.item) already had the photo")
-            //photo.loadUpdateHandler = nil
+            if(indexPath.item < 2)
+            {
+                print("cell \(indexPath.item) already had the photo")
+            }
+            photo.loadUpdateHandler = nil
             self.noPhotosFound.hidden = true
             cell.imageView.image = image
             cell.activityIndicator.stopAnimating()
@@ -209,41 +212,24 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         {
             noPhotosFound.hidden = true
             
-            print("cell \(indexPath.item) is getting the photo")
+            cell.imageView.image = UIImage(named: "photoDownloading")
+            cell.activityIndicator.startAnimating()
             
-            if(photo.isDownloading)
-            {
-                //photo.loadUpdateHandler = nil
-                cell.imageView.image = UIImage(named: "photoDownloading")
-                cell.activityIndicator.startAnimating()
-            }
-            else
-            {
-                if let imageURL = NSURL(string: photo.url_m)
+            //print("photo data pre download: \(photo.path) \(photo.title) \(photo.url_m) \(photo.photoImage)")
+            
+            if let imageURL = NSURL(string: photo.url_m)
                 {
                     if let imageData = NSData(contentsOfURL: imageURL)
                     {
                         let foundImage = UIImage(data: imageData)
                         
-                        /*photo.loadUpdateHandler = { [unowned self] () -> Void in
-                        dispatch_async(dispatch_get_main_queue(), {
-                        self.collectionView.reloadItemsAtIndexPaths([indexPath])
-                        })
-                        }*/
-                        photo.photoImage = foundImage
-                        
-                        dispatch_async(dispatch_get_main_queue()) {
-                            
-                            print("cell \(indexPath.item) will display the photo")
-                            cell.imageView.image = foundImage
-                            cell.activityIndicator.stopAnimating()
+                        photo.loadUpdateHandler = { [unowned self] () -> Void in
+                            dispatch_async(dispatch_get_main_queue(), {
+                                self.collectionView.reloadItemsAtIndexPaths([indexPath])
+                            })
                         }
+                        photo.photoImage = foundImage
                     }
-                }
-                else
-                {
-                    print("NSURL could not make a URL from photo.url_m")
-                }
             }
         }
     }
@@ -253,8 +239,6 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     func findPhotos(pin: Location)
     {
         pin.alreadyGotPhotos = true
-        
-        print("findPhotos is getting photos")
         
         //find the photos for the selected latitude and longitude
         FlickrClient.sharedInstance().getPhotos(pin) { result, error in
@@ -270,7 +254,6 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             {
                 dispatch_async(dispatch_get_main_queue()) {
                     
-                    print("results saving...")
                     CoreDataStackManager.sharedInstance().saveContext()
                 }
             }
