@@ -21,7 +21,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     var longPressRecognizer: UILongPressGestureRecognizer? = nil
     
-    var currentPin: Location? = nil
+    var currentPin = Pin()
     
     var deleteModeEnabled = false
     var didDragPin = false
@@ -52,7 +52,13 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         {
             for pin in pins
             {
-                mapView.addAnnotation(pin)
+                let lat = pin.latitude
+                let long = pin.longitude
+                let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
+                let annotation = Pin()
+                annotation.coordinate = coordinate
+                annotation.location = pin
+                mapView.addAnnotation(annotation)
             }
         }
     }
@@ -125,11 +131,16 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         //depending on the state of the gesture, add or select a pin, move it, or save the context
         if(recognizer.state == UIGestureRecognizerState.Began)
         {
-            currentPin = Location(latitude: pinLocation.latitude, longitude: pinLocation.longitude, context: sharedContext)
+            currentPin.location = Location(latitude: pinLocation.latitude, longitude: pinLocation.longitude, context: sharedContext)
+            
+            let lat = pinLocation.latitude
+            let long = pinLocation.longitude
+            let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
+            currentPin.coordinate = coordinate
             
             print("add new pin at latitude: \(pinLocation.latitude) longitude: \(pinLocation.longitude)")
             
-            mapView.addAnnotation(currentPin!)
+            mapView.addAnnotation(currentPin)
         }
         else if(recognizer.state == UIGestureRecognizerState.Ended)
         {
@@ -183,40 +194,49 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         mapView.deselectAnnotation(view.annotation, animated: false)
         view.setSelected(true, animated: false)
         
-        currentPin = view.annotation as? Location
-        
-        if(deleteModeEnabled)
+        if let annotation = view.annotation as? Pin
         {
-            //delete the pin if we are in edit mode
-            mapView.removeAnnotation(view.annotation!)
-            sharedContext.deleteObject(currentPin!)
-            CoreDataStackManager.sharedInstance().saveContext()
-        }
-        else
-        {
-            if(didDragPin)
+            currentPin.location = annotation.location
+            
+            if(deleteModeEnabled)
             {
-                didDragPin = false
+                //delete the pin if we are in edit mode
+                mapView.removeAnnotation(view.annotation!)
+                sharedContext.deleteObject(currentPin.location!)
                 CoreDataStackManager.sharedInstance().saveContext()
             }
             else
             {
-                print("go to the selected annotation view at latitude : \(view.annotation?.coordinate.latitude) longitude: \(view.annotation?.coordinate.longitude)")
-                
-                //set the current pin as the pin that the photo controller will use
-                let photoController = storyboard!.instantiateViewControllerWithIdentifier("PhotoViewController") as! PhotoViewController
-                
-                photoController.thisPin = currentPin
-                
-                //set the back item to say "OK" instead of "Virtual Tourist"
-                //learned how to do this from this stackoverflow topic: http://stackoverflow.com/questions/9871578/how-to-change-the-uinavigationcontroller-back-button-name
-                let backItem = UIBarButtonItem(title: "OK", style: .Plain, target: nil, action: nil)
-                navigationItem.backBarButtonItem = backItem
-                
-                //go to the photo view controller
-                navigationController!.pushViewController(photoController, animated: true)
+                if(didDragPin)
+                {
+                    didDragPin = false
+                    CoreDataStackManager.sharedInstance().saveContext()
+                }
+                else
+                {
+                    print("go to the selected annotation view at latitude : \(view.annotation?.coordinate.latitude) longitude: \(view.annotation?.coordinate.longitude)")
+                    
+                    //set the current pin as the pin that the photo controller will use
+                    let photoController = storyboard!.instantiateViewControllerWithIdentifier("PhotoViewController") as! PhotoViewController
+                    
+                    photoController.thisPin = currentPin
+                    
+                    //set the back item to say "OK" instead of "Virtual Tourist"
+                    //learned how to do this from this stackoverflow topic: http://stackoverflow.com/questions/9871578/how-to-change-the-uinavigationcontroller-back-button-name
+                    let backItem = UIBarButtonItem(title: "OK", style: .Plain, target: nil, action: nil)
+                    navigationItem.backBarButtonItem = backItem
+                    
+                    //go to the photo view controller
+                    navigationController!.pushViewController(photoController, animated: true)
+                }
             }
         }
+        else
+        {
+            print("couldn't use the Pin class as the view annotation")
+        }
+        
+        
     }
     
     func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView?

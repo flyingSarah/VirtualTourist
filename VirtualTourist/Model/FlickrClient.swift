@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 class FlickrClient : NSObject {
     
@@ -48,6 +49,30 @@ class FlickrClient : NSObject {
         
         task.resume()
         return task
+    }
+    
+    //MARK --- Download
+    func downloadImage(url: NSURL, completionHandler: (data: NSData?, error: NSError?) -> Void) -> Void
+    {
+        let request = NSURLRequest(URL: url)
+        
+        //make the request
+        let task = session.dataTaskWithRequest(request) { data, response, downloadError in
+            
+            //parse and use the data (happens in completion handler)
+            if let error = downloadError
+            {
+                let newError = FlickrClient.errorForData(data, response: response, error: error)
+                completionHandler(data: nil, error: newError)
+            }
+            else
+            {
+                //download the photo??
+                completionHandler(data: data, error: nil)
+            }
+        }
+        
+        task.resume()
     }
     
     //MARK --- Helpers

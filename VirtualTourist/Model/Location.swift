@@ -10,7 +10,7 @@ import Foundation
 import MapKit
 import CoreData
 
-class Location : NSManagedObject, MKAnnotation {
+class Location : NSManagedObject {
     
     /*struct Keys
     {

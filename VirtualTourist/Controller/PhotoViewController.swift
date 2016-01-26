@@ -21,7 +21,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     //MARK --- Useful Variables
     
-    var thisPin: Location!
+    var thisPin: Pin!
     
     // The selected indexes array keeps all of the indexPaths for cells that are "selected".
     var selectedIndexes = [NSIndexPath]()
@@ -60,10 +60,10 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         noPhotosFound.hidden = true
         
-        if(!thisPin.alreadyGotPhotos)
+        if(!thisPin.location!.alreadyGotPhotos)
         {
             print("this pin doesn't already have its photos")
-            findPhotos(thisPin)
+            findPhotos(thisPin.location!)
         }
         else
         {
@@ -98,7 +98,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             print("no fetched objects")
         }
         
-        findPhotos(thisPin)
+        findPhotos(thisPin.location!)
     }
     
     //MARK --- Core Data
@@ -112,7 +112,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         let fetchRequest = NSFetchRequest(entityName: "Photo")
         
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "uniqueId", ascending: true)]
-        fetchRequest.predicate = NSPredicate(format: "location == %@", self.thisPin)
+        fetchRequest.predicate = NSPredicate(format: "location == %@", self.thisPin.location!)
         
         let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
             managedObjectContext: self.sharedContext,
@@ -203,7 +203,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             {
                 print("cell \(indexPath.item) already had the photo")
             }
-            photo.loadUpdateHandler = nil
+            //photo.loadUpdateHandler = nil
             self.noPhotosFound.hidden = true
             cell.imageView.image = image
             cell.activityIndicator.stopAnimating()
@@ -217,7 +217,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             
             //print("photo data pre download: \(photo.path) \(photo.title) \(photo.url_m) \(photo.photoImage)")
             
-            if let imageURL = NSURL(string: photo.url_m)
+            /*if let imageURL = NSURL(string: photo.url_m)
                 {
                     if let imageData = NSData(contentsOfURL: imageURL)
                     {
@@ -230,6 +230,42 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                         }
                         photo.photoImage = foundImage
                     }
+            }*/
+            
+            if let imageURL = NSURL(string: photo.url_m)
+            {
+                FlickrClient.sharedInstance().downloadImage(imageURL) { data, error in
+                    
+                    if let error = error
+                    {
+                        print("error downloading photos from imageURL: \(imageURL) \(error.localizedDescription)")
+                        dispatch_async(dispatch_get_main_queue()) {
+                            cell.imageView.image = UIImage(named: "photoNotFound")
+                            cell.activityIndicator.stopAnimating()
+                        }
+                    }
+                    else
+                    {
+                        dispatch_async(dispatch_get_main_queue()) {
+                            
+                            if let photoImage = UIImage(data: data!)
+                            {
+                                photo.photoImage = photoImage
+                            }
+                            else
+                            {
+                                cell.imageView.image = UIImage(named: "photoNotFound")
+                                cell.activityIndicator.stopAnimating()
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                print("Couldn't make an NSURL from photo.url_m string in configure cell.")
+                cell.imageView.image = UIImage(named: "photoNotFound")
+                cell.activityIndicator.stopAnimating()
             }
         }
     }

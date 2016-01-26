@@ -26,7 +26,7 @@ class Photo : NSManagedObject {
     @NSManaged var location: Location?
     @NSManaged var uniqueId: NSNumber
     
-    var loadUpdateHandler: (() -> Void)?
+    //var loadUpdateHandler: (() -> Void)?
     
     override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
@@ -115,7 +115,11 @@ class Photo : NSManagedObject {
         set
         {
             FlickrClient.Caches.imageCache.storeImage(newValue, withIdentifier: path!)
-            loadUpdateHandler?()
+            
+            dispatch_async(dispatch_get_main_queue()) {
+                CoreDataStackManager.sharedInstance().saveContext()
+            }
+            //loadUpdateHandler?()
         }
     }
 }
