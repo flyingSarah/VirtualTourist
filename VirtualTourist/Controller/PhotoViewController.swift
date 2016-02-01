@@ -18,6 +18,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var bottomButton: UIBarButtonItem!
     @IBOutlet weak var noPhotosFound: UIImageView!
+    @IBOutlet weak var masterActivityIndicator: UIActivityIndicatorView!
     
     //MARK --- Useful Variables
     
@@ -73,6 +74,9 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         if(!thisPin.location!.alreadyGotPhotos)
         {
             print("this pin doesn't already have its photos")
+            
+            masterActivityIndicator.startAnimating()
+            bottomButton.enabled = false
             findPhotos(thisPin.location!)
         }
         else
@@ -88,6 +92,10 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         if(sender.title == "New Collection")
         {
             getNewCollection()
+        }
+        else
+        {
+            deleteSelectedPhotos()
         }
     }
     
@@ -109,6 +117,25 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         }
         
         findPhotos(thisPin.location!)
+    }
+    
+    func deleteSelectedPhotos()
+    {
+        var photosToDelete = [Photo]()
+        
+        for selectedIndex in selectedIndexes
+        {
+            photosToDelete.append(fetchedResultsController.objectAtIndexPath(selectedIndex) as! Photo)
+        }
+        
+        for photo in photosToDelete
+        {
+            sharedContext.deleteObject(photo)
+        }
+        
+        selectedIndexes = [NSIndexPath]()
+        bottomButton.title = "New Collection"
+        CoreDataStackManager.sharedInstance().saveContext()
     }
     
     //MARK --- Core Data
@@ -196,7 +223,9 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell
     {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("photoCell", forIndexPath: indexPath) as! PhotoViewCell
-        cell.activityIndicator.hidesWhenStopped = true
+        
+        cell.layer.borderColor = UIColor(red: 0.92, green: 0.0, blue: 0.55, alpha: 0.6).CGColor
+        cell.layer.borderWidth = 0.0
         
         configureCell(cell, atIndexPath: indexPath)
         
@@ -271,6 +300,38 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         }
     }
     
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath)
+    {
+        //allows you to deselect items even if it was the last item you selected
+        collectionView.deselectItemAtIndexPath(indexPath, animated: false)
+        
+        let cell = collectionView.cellForItemAtIndexPath(indexPath)!
+        
+        if let _ = selectedIndexes.indexOf(indexPath)
+        {
+            cell.layer.borderWidth = 0.0
+            
+            let selectedIndex = selectedIndexes.indexOf(indexPath)
+            selectedIndexes.removeAtIndex(selectedIndex!)
+        }
+        else
+        {
+            cell.layer.borderWidth = 4.0
+            
+            selectedIndexes.append(indexPath)
+        }
+        
+        //allow deleting if any photos are selected
+        if(selectedIndexes.count > 0)
+        {
+            bottomButton.title = "Delete Selected Photos"
+        }
+        else
+        {
+            bottomButton.title = "New Collection"
+        }
+    }
+    
     //MARK --- Photo Client Stuff
     
     func findPhotos(pin: Location)
@@ -293,6 +354,11 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                     
                     CoreDataStackManager.sharedInstance().saveContext()
                 }
+            }
+            
+            dispatch_async(dispatch_get_main_queue()) {
+                self.masterActivityIndicator.stopAnimating()
+                self.bottomButton.enabled = true
             }
         }
     }

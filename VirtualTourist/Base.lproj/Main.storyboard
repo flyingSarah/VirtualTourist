@@ -127,7 +127,7 @@
                                                 <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="8XJ-Kl-Ix2">
                                                     <rect key="frame" x="0.0" y="0.0" width="120" height="120"/>
                                                 </imageView>
-                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="WFK-mZ-mxl">
+                                                <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="WFK-mZ-mxl">
                                                     <rect key="frame" x="50" y="50" width="20" height="20"/>
                                                 </activityIndicatorView>
                                             </subviews>
@@ -148,6 +148,9 @@
                                     </collectionViewCell>
                                 </cells>
                             </collectionView>
+                            <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="hYX-6Q-hn7">
+                                <rect key="frame" x="282" y="350" width="37" height="37"/>
+                            </activityIndicatorView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
@@ -155,8 +158,10 @@
                             <constraint firstItem="ZkD-Sx-GfI" firstAttribute="leading" secondItem="UHL-UI-tlG" secondAttribute="leadingMargin" constant="-20" id="6jL-DO-uGY"/>
                             <constraint firstAttribute="trailingMargin" secondItem="ZkD-Sx-GfI" secondAttribute="trailing" constant="-20" id="8Ur-B8-xqn"/>
                             <constraint firstItem="VB8-Qc-COH" firstAttribute="top" secondItem="i5P-qD-jni" secondAttribute="bottom" constant="-2" id="KqX-w1-UA0"/>
+                            <constraint firstItem="hYX-6Q-hn7" firstAttribute="centerY" secondItem="VB8-Qc-COH" secondAttribute="centerY" id="MsX-66-lna"/>
                             <constraint firstItem="VB8-Qc-COH" firstAttribute="leading" secondItem="UHL-UI-tlG" secondAttribute="leadingMargin" constant="-20" id="PyX-3u-z8C"/>
                             <constraint firstItem="CNs-Sn-cG1" firstAttribute="top" secondItem="ZkD-Sx-GfI" secondAttribute="bottom" id="QP5-6I-9zD"/>
+                            <constraint firstItem="hYX-6Q-hn7" firstAttribute="centerX" secondItem="VB8-Qc-COH" secondAttribute="centerX" id="Wai-ay-7ve"/>
                             <constraint firstItem="i5P-qD-jni" firstAttribute="centerX" secondItem="UHL-UI-tlG" secondAttribute="centerX" id="Z2m-We-cwO"/>
                             <constraint firstItem="ZkD-Sx-GfI" firstAttribute="top" secondItem="VB8-Qc-COH" secondAttribute="bottom" id="aej-Hz-KYR"/>
                             <constraint firstItem="VB8-Qc-COH" firstAttribute="centerX" secondItem="UHL-UI-tlG" secondAttribute="centerX" id="lSd-qe-UHg"/>
@@ -169,6 +174,7 @@
                         <outlet property="bottomButton" destination="6Cc-Vt-gPP" id="4KY-xH-E1h"/>
                         <outlet property="collectionView" destination="VB8-Qc-COH" id="Iwa-Ck-nWx"/>
                         <outlet property="mapView" destination="i5P-qD-jni" id="RNY-oi-fB8"/>
+                        <outlet property="masterActivityIndicator" destination="hYX-6Q-hn7" id="hRc-AD-3Ca"/>
                         <outlet property="noPhotosFound" destination="QyK-0H-oCd" id="odc-wK-BXh"/>
                     </connections>
                 </viewController>
