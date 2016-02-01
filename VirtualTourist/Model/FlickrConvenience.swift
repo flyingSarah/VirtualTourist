@@ -76,7 +76,7 @@ extension FlickrClient {
                                                         print("Successfully found \(photoArray.count) photos from Flickr")
                                                         
                                                         let photos = Photo.photosFromResults(photoArray, location: pin)
-                                                        FlickrClient.sharedInstance().photos = photos
+                                                        FlickrClient.sharedInstance.photos = photos
                                                         
                                                         completionHandler(result: photos, error: nil)
                                                     }
@@ -97,7 +97,7 @@ extension FlickrClient {
                                                                         print("Successfully found \(pageOnePhotoArray.count) photos from Page 1 of Flickr results")
                                                                         
                                                                         let photos = Photo.photosFromResults(pageOnePhotoArray, location: pin)
-                                                                        FlickrClient.sharedInstance().photos = photos
+                                                                        FlickrClient.sharedInstance.photos = photos
                                                                         
                                                                         completionHandler(result: photos, error: nil)
                                                                     }

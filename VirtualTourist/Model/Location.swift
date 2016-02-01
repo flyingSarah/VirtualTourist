@@ -17,11 +17,13 @@ class Location : NSManagedObject {
     @NSManaged var photos: NSSet
     @NSManaged var alreadyGotPhotos: Bool
     
-    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
+    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?)
+    {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
     }
     
-    init(latitude: Double, longitude: Double, context: NSManagedObjectContext) {
+    init(latitude: Double, longitude: Double, context: NSManagedObjectContext)
+    {
         
         // Get the entity associated with the "Person" type.  This is an object that contains
         // the information from the Model.xcdatamodeld file. We will talk about this file in

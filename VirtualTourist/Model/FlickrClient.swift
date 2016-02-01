@@ -11,6 +11,8 @@ import UIKit
 
 class FlickrClient : NSObject {
     
+    static let sharedInstance = FlickrClient()
+    
     //shared session
     var session: NSURLSession
     
@@ -138,17 +140,6 @@ class FlickrClient : NSObject {
         
         components.queryItems = queryItems
         return components.percentEncodedQuery ?? ""
-    }
-    
-    //MARK --- Shared Instance
-    class func sharedInstance() -> FlickrClient
-    {
-        struct Singleton
-        {
-            static var sharedInstance = FlickrClient()
-        }
-        
-        return Singleton.sharedInstance
     }
     
     //MARK --- Shared Image Cache

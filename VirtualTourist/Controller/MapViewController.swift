@@ -78,20 +78,23 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         addPinDropRecognizer()
         
         //add the pin annotations to the map by fetching the saved locations
-        let pins = fetchLocations()
-        
-        if(!pins.isEmpty)
+        if(mapView.annotations.isEmpty)
         {
-            for pin in pins
+            let pins = fetchLocations()
+            
+            if(!pins.isEmpty)
             {
-                let lat = pin.latitude
-                let long = pin.longitude
-                let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
-                let annotation = Pin()
-                annotation.coordinate = coordinate
-                annotation.location = pin
-                print("added annotation on view change at lat: \(annotation.coordinate.latitude) long: \(annotation.coordinate.longitude)")
-                mapView.addAnnotation(annotation)
+                for pin in pins
+                {
+                    let lat = pin.latitude
+                    let long = pin.longitude
+                    let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
+                    let annotation = Pin()
+                    annotation.coordinate = coordinate
+                    annotation.location = pin
+                    print("added annotation on viewWillAppear at lat: \(round(1000*lat)/1000) long: \(round(1000*long)/1000)")
+                    mapView.addAnnotation(annotation)
+                }
             }
         }
     }
@@ -114,8 +117,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             deleteModeButton.title = "Delete"
             deleteLabel.hidden = true
             addPinDropRecognizer()
-            
-            //TODO: update context if pins change
             
         }
         else
@@ -172,7 +173,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
             currentPin.coordinate = coordinate
             
-            print("add new pin at latitude: \(pinLocation.latitude) longitude: \(pinLocation.longitude)")
+            print("add new pin at latitude: \(round(1000*lat)/1000) longitude: \(round(1000*long)/1000)")
             
             mapView.addAnnotation(currentPin)
         }
@@ -197,6 +198,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             
             if(deleteModeEnabled)
             {
+                print("deleted pin at latitude: \(round(1000*currentPin.coordinate.latitude)/1000) longitude: \(round(1000*currentPin.coordinate.longitude)/1000)")
+                
                 //delete the pin if we are in edit mode
                 mapView.removeAnnotation(annotation)
                 sharedContext.deleteObject(currentPin.location!)
@@ -207,7 +210,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 if(didDragPin)
                 {
                     didDragPin = false
-                    print("move pin to latitude: \(currentPin.coordinate.latitude) longitude: \(currentPin.coordinate.longitude)")
+                    print("move pin to latitude: \(round(1000*currentPin.coordinate.latitude)/1000) longitude: \(round(1000*currentPin.coordinate.longitude)/1000)")
                     
                     sharedContext.deleteObject(currentPin.location!)
                     
@@ -217,7 +220,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 }
                 else
                 {
-                    print("go to the selected annotation view at latitude : \(view.annotation?.coordinate.latitude) longitude: \(view.annotation?.coordinate.longitude)")
+                    print("go to the selected annotation view at latitude : \(round(1000*currentPin.coordinate.latitude)/1000) longitude: \(round(1000*currentPin.coordinate.longitude)/1000)")
                     
                     //set the current pin as the pin that the photo controller will use
                     let photoController = storyboard!.instantiateViewControllerWithIdentifier("PhotoViewController") as! PhotoViewController
@@ -234,12 +237,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 }
             }
         }
-        else
-        {
-            print("couldn't use the Pin class as the view annotation")
-        }
-        
-        
     }
     
     func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView?
@@ -289,7 +286,5 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         NSUserDefaults.standardUserDefaults().setDouble(longitudeDelta, forKey: Keys.LongitudeDelta)
         NSUserDefaults.standardUserDefaults().setDouble(centerLatitude, forKey: Keys.CenterLatitude)
         NSUserDefaults.standardUserDefaults().setDouble(centerLongitude, forKey: Keys.CenterLongitude)
-        
-        print("saved map region to user defaults")
     }
 }

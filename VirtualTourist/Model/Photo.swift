@@ -28,11 +28,33 @@ class Photo : NSManagedObject {
     
     var loadUpdateHandler: (() -> Void)?
     
-    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
+    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?)
+    {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
     }
     
-    init(dictionary: [String : AnyObject], context: NSManagedObjectContext) {
+    override func prepareForDeletion()
+    {
+        super.prepareForDeletion()
+        
+        if let path = path
+        {
+            if(NSFileManager.defaultManager().fileExistsAtPath(path))
+            {
+                do
+                {
+                    try NSFileManager.defaultManager().removeItemAtPath(path)
+                }
+                catch
+                {
+                    NSLog("could not delete photo at \(path): \(error)")
+                }
+            }
+        }
+    }
+    
+    init(dictionary: [String : AnyObject], context: NSManagedObjectContext)
+    {
         
         // Get the entity associated with the "Person" type.  This is an object that contains
         // the information from the Model.xcdatamodeld file. We will talk about this file in

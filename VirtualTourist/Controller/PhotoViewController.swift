@@ -61,7 +61,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         }
         catch
         {
-            NSLog("could not perform fetch: \(error)")
+            showAlertController("Error Fetching Photos", message: String(error))
         }
     }
     
@@ -73,15 +73,11 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         if(!thisPin.location!.alreadyGotPhotos)
         {
-            print("this pin doesn't already have its photos")
+            //print("this pin doesn't already have its photos")
             
             masterActivityIndicator.startAnimating()
             bottomButton.enabled = false
             findPhotos(thisPin.location!)
-        }
-        else
-        {
-            print("this pin already has its photos")
         }
     }
     
@@ -101,21 +97,20 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     func getNewCollection()
     {
+        masterActivityIndicator.startAnimating()
+        
         if let fetchedObjects = self.fetchedResultsController.fetchedObjects
         {
+            //delete existing photos
             for object in fetchedObjects
             {
                 let photo = object as! Photo
                 self.sharedContext.deleteObject(photo)
             }
             CoreDataStackManager.sharedInstance().saveContext()
-            print("delete the objects")
-        }
-        else
-        {
-            print("no fetched objects")
         }
         
+        //find new photos
         findPhotos(thisPin.location!)
     }
     
@@ -257,7 +252,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             
             if let imageURL = NSURL(string: photo.url_m)
             {
-                FlickrClient.sharedInstance().downloadImage(imageURL) { data, error in
+                FlickrClient.sharedInstance.downloadImage(imageURL) { data, error in
                     
                     if let error = error
                     {
@@ -339,11 +334,14 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         pin.alreadyGotPhotos = true
         
         //find the photos for the selected latitude and longitude
-        FlickrClient.sharedInstance().getPhotos(pin) { result, error in
+        FlickrClient.sharedInstance.getPhotos(pin) { result, error in
             
             if let error = error
             {
-                print("error getting photos from lat/lon:\n  \(error.code)\n  \(error.localizedDescription)")
+                //print("error getting photos from lat/lon:\n  \(error.code)\n  \(error.localizedDescription)")
+                
+                self.showAlertController("Error Getting Photos", message: error.localizedDescription)
+                
                 dispatch_async(dispatch_get_main_queue()) {
                     self.noPhotosFound.hidden = false
                 }
@@ -361,5 +359,19 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                 self.bottomButton.enabled = true
             }
         }
+    }
+    
+    //MARK --- Helper functions
+    
+    func showAlertController(title: String, message: String)
+    {
+        dispatch_async(dispatch_get_main_queue(), {
+            
+            let alert: UIAlertController = UIAlertController(title: title, message: message, preferredStyle: .Alert)
+            let okAction: UIAlertAction = UIAlertAction(title: "OK", style: .Cancel, handler: nil)
+            alert.addAction(okAction)
+            
+            self.presentViewController(alert, animated: true, completion: nil)
+        })
     }
 }
