@@ -26,6 +26,16 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     var deleteModeEnabled = false
     var didDragPin = false
     
+    //MARK --- Keys for UserDefaults
+    struct Keys
+    {
+        static let AppHasBeenLaunchedBefore = "appHasBeenLaunchedBefore"
+        static let LatitudeDelta = "latitudeDelta"
+        static let LongitudeDelta = "longitudeDelta"
+        static let CenterLatitude = "centerLatitude"
+        static let CenterLongitude = "centerLongitude"
+    }
+    
     //MARK --- Lifecycle
     
     override func viewDidLoad()
@@ -37,6 +47,28 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         
         longPressRecognizer = UILongPressGestureRecognizer(target: self, action: Selector("pinDrop:"))
         longPressRecognizer?.minimumPressDuration = 0.5
+        
+        //check to see if the app has been launched before, if so, load the user defaults for the map region
+        let appHasBeenLaunchedBefore = NSUserDefaults.standardUserDefaults().boolForKey(Keys.AppHasBeenLaunchedBefore)
+        
+        if(appHasBeenLaunchedBefore)
+        {
+            //Retreive the Map Region from the NSUserDefaults
+            let latitudeDelta = NSUserDefaults.standardUserDefaults().doubleForKey(Keys.LatitudeDelta) as CLLocationDegrees
+            let longitudeDelta = NSUserDefaults.standardUserDefaults().doubleForKey(Keys.LongitudeDelta) as CLLocationDegrees
+            let coordinateSpan = MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
+            
+            let centerLatitude = NSUserDefaults.standardUserDefaults().doubleForKey(Keys.CenterLatitude) as CLLocationDegrees
+            let centerLongitude = NSUserDefaults.standardUserDefaults().doubleForKey(Keys.CenterLongitude) as CLLocationDegrees
+            let centerLocation = CLLocationCoordinate2D(latitude: centerLatitude, longitude: centerLongitude)
+            
+            mapView.setRegion(MKCoordinateRegion(center: centerLocation, span: coordinateSpan), animated: false)
+        }
+        else
+        {
+            NSUserDefaults.standardUserDefaults().setBool(true, forKey: Keys.AppHasBeenLaunchedBefore)
+        }
+        
     }
     
     override func viewWillAppear(animated: Bool)
@@ -58,6 +90,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 let annotation = Pin()
                 annotation.coordinate = coordinate
                 annotation.location = pin
+                print("added annotation on view change at lat: \(annotation.coordinate.latitude) long: \(annotation.coordinate.longitude)")
                 mapView.addAnnotation(annotation)
             }
         }
@@ -83,6 +116,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             addPinDropRecognizer()
             
             //TODO: update context if pins change
+            
         }
         else
         {
@@ -146,45 +180,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         {
             //save context now that new pins have been added
             CoreDataStackManager.sharedInstance().saveContext()
-            
-            //pre-fetch photo
-            //findPhotos(currentPin!)
         }
     }
-    
-    /*func findPhotos(pin: Location)
-    {
-        if(pin.isGettingPhotos)
-        {
-            return
-        }
-        else
-        {
-            pin.isGettingPhotos = true
-        }
-        
-        //find the photos for the selected latitude and longitude
-        FlickrClient.sharedInstance().getPhotos(pin) { result, error in
-            
-            if let error = error
-            {
-                print("error getting photos from lat/lon:\n  \(error.code)\n  \(error.localizedDescription)")
-            }
-            else
-            {
-                dispatch_async(dispatch_get_main_queue()) {
-                    
-                    print("saved context after getting photos from map view")
-                    CoreDataStackManager.sharedInstance().saveContext()
-                }
-            }
-            
-            dispatch_async(dispatch_get_main_queue()) {
-                
-                pin.isGettingPhotos = false
-            }
-        }
-    }*/
     
     //MARK --- Map View Delegate
     
@@ -196,12 +193,12 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         
         if let annotation = view.annotation as? Pin
         {
-            currentPin.location = annotation.location
+            currentPin = annotation
             
             if(deleteModeEnabled)
             {
                 //delete the pin if we are in edit mode
-                mapView.removeAnnotation(view.annotation!)
+                mapView.removeAnnotation(annotation)
                 sharedContext.deleteObject(currentPin.location!)
                 CoreDataStackManager.sharedInstance().saveContext()
             }
@@ -210,6 +207,12 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 if(didDragPin)
                 {
                     didDragPin = false
+                    print("move pin to latitude: \(currentPin.coordinate.latitude) longitude: \(currentPin.coordinate.longitude)")
+                    
+                    sharedContext.deleteObject(currentPin.location!)
+                    
+                    currentPin.location = Location(latitude: annotation.coordinate.latitude, longitude: annotation.coordinate.longitude, context: sharedContext)
+                    
                     CoreDataStackManager.sharedInstance().saveContext()
                 }
                 else
@@ -272,5 +275,21 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             didDragPin = true
         default: break
         }
+    }
+    
+    func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool)
+    {
+        //save map region to the user defaults whenever it changes
+        let latitudeDelta = mapView.region.span.latitudeDelta as Double
+        let longitudeDelta = mapView.region.span.longitudeDelta as Double
+        let centerLatitude = mapView.region.center.latitude as Double
+        let centerLongitude = mapView.region.center.longitude as Double
+        
+        NSUserDefaults.standardUserDefaults().setDouble(latitudeDelta, forKey: Keys.LatitudeDelta)
+        NSUserDefaults.standardUserDefaults().setDouble(longitudeDelta, forKey: Keys.LongitudeDelta)
+        NSUserDefaults.standardUserDefaults().setDouble(centerLatitude, forKey: Keys.CenterLatitude)
+        NSUserDefaults.standardUserDefaults().setDouble(centerLongitude, forKey: Keys.CenterLongitude)
+        
+        print("saved map region to user defaults")
     }
 }

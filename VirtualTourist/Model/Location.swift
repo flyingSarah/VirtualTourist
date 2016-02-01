@@ -12,14 +12,6 @@ import CoreData
 
 class Location : NSManagedObject {
     
-    /*struct Keys
-    {
-        static let Latitude = "latitude"
-        static let Longitude = "longitude"
-        static let Photos = "photos"
-        static let DidGetPhotos = "did_get_photos"
-    }*/
-    
     @NSManaged var latitude: Double
     @NSManaged var longitude: Double
     @NSManaged var photos: NSSet

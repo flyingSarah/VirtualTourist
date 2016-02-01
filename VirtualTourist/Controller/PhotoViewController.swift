@@ -43,6 +43,16 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         collectionView.dataSource = self
         fetchedResultsController.delegate = self
         
+        //annotation for map view and zoom in
+        let lat = CLLocationDegrees(thisPin.location!.latitude)
+        let long = CLLocationDegrees(thisPin.location!.longitude)
+        let coordinates = CLLocationCoordinate2D(latitude: lat, longitude: long)
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = coordinates
+
+        mapView.addAnnotation(annotation)
+        mapView.setRegion(MKCoordinateRegionMakeWithDistance(coordinates, 20000, 20000), animated: false)
+        
         //perform the fetch for the core data we need to access
         do
         {
@@ -203,7 +213,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             {
                 print("cell \(indexPath.item) already had the photo")
             }
-            //photo.loadUpdateHandler = nil
+            photo.loadUpdateHandler = nil
             self.noPhotosFound.hidden = true
             cell.imageView.image = image
             cell.activityIndicator.stopAnimating()
@@ -212,25 +222,9 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         {
             noPhotosFound.hidden = true
             
+            photo.loadUpdateHandler = nil
             cell.imageView.image = UIImage(named: "photoDownloading")
             cell.activityIndicator.startAnimating()
-            
-            //print("photo data pre download: \(photo.path) \(photo.title) \(photo.url_m) \(photo.photoImage)")
-            
-            /*if let imageURL = NSURL(string: photo.url_m)
-                {
-                    if let imageData = NSData(contentsOfURL: imageURL)
-                    {
-                        let foundImage = UIImage(data: imageData)
-                        
-                        photo.loadUpdateHandler = { [unowned self] () -> Void in
-                            dispatch_async(dispatch_get_main_queue(), {
-                                self.collectionView.reloadItemsAtIndexPaths([indexPath])
-                            })
-                        }
-                        photo.photoImage = foundImage
-                    }
-            }*/
             
             if let imageURL = NSURL(string: photo.url_m)
             {
@@ -240,6 +234,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                     {
                         print("error downloading photos from imageURL: \(imageURL) \(error.localizedDescription)")
                         dispatch_async(dispatch_get_main_queue()) {
+                            photo.loadUpdateHandler = nil
                             cell.imageView.image = UIImage(named: "photoNotFound")
                             cell.activityIndicator.stopAnimating()
                         }
@@ -250,10 +245,16 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                             
                             if let photoImage = UIImage(data: data!)
                             {
+                                photo.loadUpdateHandler = { [unowned self] () -> Void in
+                                    dispatch_async(dispatch_get_main_queue(), {
+                                        self.collectionView.reloadItemsAtIndexPaths([indexPath])
+                                    })
+                                }
                                 photo.photoImage = photoImage
                             }
                             else
                             {
+                                photo.loadUpdateHandler = nil
                                 cell.imageView.image = UIImage(named: "photoNotFound")
                                 cell.activityIndicator.stopAnimating()
                             }
