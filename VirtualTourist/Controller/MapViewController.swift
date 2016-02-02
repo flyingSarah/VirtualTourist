@@ -69,6 +69,24 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             NSUserDefaults.standardUserDefaults().setBool(true, forKey: Keys.AppHasBeenLaunchedBefore)
         }
         
+        
+        let pins = fetchLocations()
+        
+        if(!pins.isEmpty)
+        {
+            for pin in pins
+            {
+                let lat = pin.latitude
+                let long = pin.longitude
+                let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
+                let annotation = Pin()
+                annotation.coordinate = coordinate
+                annotation.location = pin
+                print("added annotation on viewWillAppear at lat: \(round(1000*lat)/1000) long: \(round(1000*long)/1000)")
+                mapView.addAnnotation(annotation)
+            }
+        }
+        
     }
     
     override func viewWillAppear(animated: Bool)
@@ -76,27 +94,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         super.viewWillAppear(animated)
         
         addPinDropRecognizer()
-        
-        //add the pin annotations to the map by fetching the saved locations
-        if(mapView.annotations.isEmpty)
-        {
-            let pins = fetchLocations()
-            
-            if(!pins.isEmpty)
-            {
-                for pin in pins
-                {
-                    let lat = pin.latitude
-                    let long = pin.longitude
-                    let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
-                    let annotation = Pin()
-                    annotation.coordinate = coordinate
-                    annotation.location = pin
-                    print("added annotation on viewWillAppear at lat: \(round(1000*lat)/1000) long: \(round(1000*long)/1000)")
-                    mapView.addAnnotation(annotation)
-                }
-            }
-        }
     }
     
     //MARK --- Core Data
@@ -166,6 +163,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         //depending on the state of the gesture, add or select a pin, move it, or save the context
         if(recognizer.state == UIGestureRecognizerState.Began)
         {
+            currentPin = Pin()
+            
             currentPin.location = Location(latitude: pinLocation.latitude, longitude: pinLocation.longitude, context: sharedContext)
             
             let lat = pinLocation.latitude
