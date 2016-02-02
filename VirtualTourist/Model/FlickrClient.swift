@@ -69,7 +69,6 @@ class FlickrClient : NSObject {
             }
             else
             {
-                //download the photo??
                 completionHandler(data: data, error: nil)
             }
         }
@@ -106,9 +105,13 @@ class FlickrClient : NSObject {
         var parsingError: NSError? = nil
         
         let parsedResult: AnyObject?
-        do {
+        
+        do
+        {
             parsedResult = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments)
-        } catch let error as NSError {
+        }
+        catch let error as NSError
+        {
             parsingError = error
             parsedResult = nil
         }

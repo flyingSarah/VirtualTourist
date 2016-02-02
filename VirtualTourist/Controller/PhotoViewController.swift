@@ -165,8 +165,6 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         insertedIndexPaths = [NSIndexPath]()
         deletedIndexPaths = [NSIndexPath]()
         updatedIndexPaths = [NSIndexPath]()
-        
-        print("the fetched results will change the content")
     }
     
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?)
@@ -182,7 +180,6 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             updatedIndexPaths.append(indexPath!)
             break
         case .Move:
-            print("Move an item. We don't expect to see this in this app.")
             break
         }
     }
@@ -210,8 +207,6 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
     {
         let cellCount = self.fetchedResultsController.sections![section].numberOfObjects
-        //print("cell count in collection view: \(cellCount)")
-
         return cellCount
     }
     
@@ -233,10 +228,6 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         if let image = photo.photoImage
         {
-            if(indexPath.item < 2)
-            {
-                print("cell \(indexPath.item) already had the photo")
-            }
             photo.loadUpdateHandler = nil
             self.noPhotosFound.hidden = true
             cell.imageView.image = image
