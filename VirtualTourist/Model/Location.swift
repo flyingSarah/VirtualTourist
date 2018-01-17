@@ -17,18 +17,18 @@ class Location : NSManagedObject {
     @NSManaged var photos: NSSet
     @NSManaged var alreadyGotPhotos: Bool
     
-    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?)
+    override init(entity: NSEntityDescription, insertInto context: NSManagedObjectContext?)
     {
-        super.init(entity: entity, insertIntoManagedObjectContext: context)
+        super.init(entity: entity, insertInto: context)
     }
     
     init(latitude: Double, longitude: Double, context: NSManagedObjectContext)
     {
         
         // Get the entity associated with the "Location" type.
-        let entity =  NSEntityDescription.entityForName("Location", inManagedObjectContext: context)!
+        let entity =  NSEntityDescription.entity(forEntityName: "Location", in: context)!
         
-        super.init(entity: entity,insertIntoManagedObjectContext: context)
+        super.init(entity: entity,insertInto: context)
         
         self.latitude = latitude
         self.longitude = longitude

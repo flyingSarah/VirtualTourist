@@ -25,12 +25,12 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     var thisPin: Pin!
     
     // The selected indexes array keeps all of the indexPaths for cells that are "selected".
-    var selectedIndexes = [NSIndexPath]()
+    var selectedIndexes = [IndexPath]()
     
     // Keep the changes. We will keep track of insertions, deletions, and updates.
-    var insertedIndexPaths: [NSIndexPath]!
-    var deletedIndexPaths: [NSIndexPath]!
-    var updatedIndexPaths: [NSIndexPath]!
+    var insertedIndexPaths: [IndexPath]!
+    var deletedIndexPaths: [IndexPath]!
+    var updatedIndexPaths: [IndexPath]!
     
     //MARK --- Lifecycle
     
@@ -38,7 +38,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     {
         super.viewDidLoad()
         
-        mapView.userInteractionEnabled = false
+        mapView.isUserInteractionEnabled = false
         
         collectionView.delegate = self
         collectionView.dataSource = self
@@ -61,29 +61,29 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         }
         catch
         {
-            showAlertController("Error Fetching Photos", message: String(error))
+            showAlertController("Error Fetching Photos", message: String(describing: error))
         }
     }
     
-    override func viewWillAppear(animated: Bool)
+    override func viewWillAppear(_ animated: Bool)
     {
         super.viewWillAppear(animated)
         
-        noPhotosFound.hidden = true
+        noPhotosFound.isHidden = true
         
         if(!thisPin.location!.alreadyGotPhotos)
         {
             //print("this pin doesn't already have its photos")
             
             masterActivityIndicator.startAnimating()
-            bottomButton.enabled = false
+            bottomButton.isEnabled = false
             findPhotos(thisPin.location!)
         }
     }
     
     //MARK --- Refresh and/or Delete Behavior
     
-    @IBAction func bottomButtonTriggered(sender: UIBarButtonItem)
+    @IBAction func bottomButtonTriggered(_ sender: UIBarButtonItem)
     {
         if(sender.title == "New Collection")
         {
@@ -104,8 +104,8 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             //delete existing photos
             for object in fetchedObjects
             {
-                let photo = object as! Photo
-                self.sharedContext.deleteObject(photo)
+                let photo = object 
+                self.sharedContext.delete(photo)
             }
             CoreDataStackManager.sharedInstance().saveContext()
         }
@@ -120,15 +120,15 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         
         for selectedIndex in selectedIndexes
         {
-            photosToDelete.append(fetchedResultsController.objectAtIndexPath(selectedIndex) as! Photo)
+            photosToDelete.append(fetchedResultsController.object(at: selectedIndex) )
         }
         
         for photo in photosToDelete
         {
-            sharedContext.deleteObject(photo)
+            sharedContext.delete(photo)
         }
         
-        selectedIndexes = [NSIndexPath]()
+        selectedIndexes = [IndexPath]()
         bottomButton.title = "New Collection"
         CoreDataStackManager.sharedInstance().saveContext()
     }
@@ -139,9 +139,9 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         return CoreDataStackManager.sharedInstance().managedObjectContext
     }
     
-    lazy var fetchedResultsController: NSFetchedResultsController = {
+    lazy var fetchedResultsController: NSFetchedResultsController<Photo> = {
         
-        let fetchRequest = NSFetchRequest(entityName: "Photo")
+        let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: "Photo")
         
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "uniqueId", ascending: true)]
         fetchRequest.predicate = NSPredicate(format: "location == %@", self.thisPin.location!)
@@ -151,7 +151,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
             sectionNameKeyPath: nil,
             cacheName: nil)
         
-        return fetchedResultsController
+        return fetchedResultsController as! NSFetchedResultsController<Photo>
         
         }()
     
@@ -159,62 +159,62 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     //I learned how to adapt the collection view for these methods from this stack overflow topic: http://stackoverflow.com/questions/20554137/nsfetchedresultscontollerdelegate-for-collectionview
     
-    func controllerWillChangeContent(controller: NSFetchedResultsController)
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>)
     {
         // We are about to handle some new changes. Start out with empty arrays for each change type
-        insertedIndexPaths = [NSIndexPath]()
-        deletedIndexPaths = [NSIndexPath]()
-        updatedIndexPaths = [NSIndexPath]()
+        insertedIndexPaths = [IndexPath]()
+        deletedIndexPaths = [IndexPath]()
+        updatedIndexPaths = [IndexPath]()
     }
     
-    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?)
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?)
     {
         switch type {
-        case .Insert:
+        case .insert:
             insertedIndexPaths.append(newIndexPath!)
             break
-        case .Delete:
+        case .delete:
             deletedIndexPaths.append(indexPath!)
             break
-        case .Update:
+        case .update:
             updatedIndexPaths.append(indexPath!)
             break
-        case .Move:
+        case .move:
             break
         }
     }
     
-    func controllerDidChangeContent(controller: NSFetchedResultsController)
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>)
     {
         collectionView.performBatchUpdates({ () -> Void in
             
             for indexPath in self.insertedIndexPaths {
-                self.collectionView.insertItemsAtIndexPaths([indexPath])
+                self.collectionView.insertItems(at: [indexPath])
             }
             
             for indexPath in self.deletedIndexPaths {
-                self.collectionView.deleteItemsAtIndexPaths([indexPath])
+                self.collectionView.deleteItems(at: [indexPath])
             }
             
             for indexPath in self.updatedIndexPaths {
-                self.collectionView.reloadItemsAtIndexPaths([indexPath])
+                self.collectionView.reloadItems(at: [indexPath])
             }
         }, completion: nil)
     }
     
     //MARK --- Collection View
     
-    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
     {
         let cellCount = self.fetchedResultsController.sections![section].numberOfObjects
         return cellCount
     }
     
-    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell
     {
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("photoCell", forIndexPath: indexPath) as! PhotoViewCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "photoCell", for: indexPath) as! PhotoViewCell
         
-        cell.layer.borderColor = UIColor(red: 0.92, green: 0.0, blue: 0.55, alpha: 0.6).CGColor
+        cell.layer.borderColor = UIColor(red: 0.92, green: 0.0, blue: 0.55, alpha: 0.6).cgColor
         cell.layer.borderWidth = 0.0
         
         configureCell(cell, atIndexPath: indexPath)
@@ -222,33 +222,33 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         return cell
     }
     
-    func configureCell(cell: PhotoViewCell, atIndexPath indexPath: NSIndexPath)
+    func configureCell(_ cell: PhotoViewCell, atIndexPath indexPath: IndexPath)
     {
-        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+        let photo = fetchedResultsController.object(at: indexPath) 
         
         if let image = photo.photoImage
         {
             photo.loadUpdateHandler = nil
-            self.noPhotosFound.hidden = true
+            self.noPhotosFound.isHidden = true
             cell.imageView.image = image
             cell.activityIndicator.stopAnimating()
         }
         else
         {
-            noPhotosFound.hidden = true
+            noPhotosFound.isHidden = true
             
             photo.loadUpdateHandler = nil
             cell.imageView.image = UIImage(named: "photoDownloading")
             cell.activityIndicator.startAnimating()
             
-            if let imageURL = NSURL(string: photo.url_m)
+            if let imageURL = URL(string: photo.url_m)
             {
                 FlickrClient.sharedInstance.downloadImage(imageURL) { data, error in
                     
                     if let error = error
                     {
                         print("error downloading photos from imageURL: \(imageURL) \(error.localizedDescription)")
-                        dispatch_async(dispatch_get_main_queue()) {
+                        DispatchQueue.main.async {
                             photo.loadUpdateHandler = nil
                             cell.imageView.image = UIImage(named: "photoNotFound")
                             cell.activityIndicator.stopAnimating()
@@ -256,13 +256,13 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                     }
                     else
                     {
-                        dispatch_async(dispatch_get_main_queue()) {
+                        DispatchQueue.main.async {
                             
                             if let photoImage = UIImage(data: data!)
                             {
                                 photo.loadUpdateHandler = { [unowned self] () -> Void in
-                                    dispatch_async(dispatch_get_main_queue(), {
-                                        self.collectionView.reloadItemsAtIndexPaths([indexPath])
+                                    DispatchQueue.main.async(execute: {
+                                        self.collectionView.reloadItems(at: [indexPath])
                                     })
                                 }
                                 photo.photoImage = photoImage
@@ -286,19 +286,19 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
         }
     }
     
-    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath)
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath)
     {
         //allows you to deselect items even if it was the last item you selected
-        collectionView.deselectItemAtIndexPath(indexPath, animated: false)
+        collectionView.deselectItem(at: indexPath, animated: false)
         
-        let cell = collectionView.cellForItemAtIndexPath(indexPath)!
+        let cell = collectionView.cellForItem(at: indexPath)!
         
-        if let _ = selectedIndexes.indexOf(indexPath)
+        if let _ = selectedIndexes.index(of: indexPath)
         {
             cell.layer.borderWidth = 0.0
             
-            let selectedIndex = selectedIndexes.indexOf(indexPath)
-            selectedIndexes.removeAtIndex(selectedIndex!)
+            let selectedIndex = selectedIndexes.index(of: indexPath)
+            selectedIndexes.remove(at: selectedIndex!)
         }
         else
         {
@@ -320,7 +320,7 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
     
     //MARK --- Photo Client Stuff
     
-    func findPhotos(pin: Location)
+    func findPhotos(_ pin: Location)
     {
         pin.alreadyGotPhotos = true
         
@@ -333,36 +333,36 @@ class PhotoViewController: UIViewController, UICollectionViewDelegate, UICollect
                 
                 self.showAlertController("Error Getting Photos", message: error.localizedDescription)
                 
-                dispatch_async(dispatch_get_main_queue()) {
-                    self.noPhotosFound.hidden = false
+                DispatchQueue.main.async {
+                    self.noPhotosFound.isHidden = false
                 }
             }
             else
             {
-                dispatch_async(dispatch_get_main_queue()) {
+                DispatchQueue.main.async {
                     
                     CoreDataStackManager.sharedInstance().saveContext()
                 }
             }
             
-            dispatch_async(dispatch_get_main_queue()) {
+            DispatchQueue.main.async {
                 self.masterActivityIndicator.stopAnimating()
-                self.bottomButton.enabled = true
+                self.bottomButton.isEnabled = true
             }
         }
     }
     
     //MARK --- Helper functions
     
-    func showAlertController(title: String, message: String)
+    func showAlertController(_ title: String, message: String)
     {
-        dispatch_async(dispatch_get_main_queue(), {
+        DispatchQueue.main.async(execute: {
             
-            let alert: UIAlertController = UIAlertController(title: title, message: message, preferredStyle: .Alert)
-            let okAction: UIAlertAction = UIAlertAction(title: "OK", style: .Cancel, handler: nil)
+            let alert: UIAlertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+            let okAction: UIAlertAction = UIAlertAction(title: "OK", style: .cancel, handler: nil)
             alert.addAction(okAction)
             
-            self.presentViewController(alert, animated: true, completion: nil)
+            self.present(alert, animated: true, completion: nil)
         })
     }
 }

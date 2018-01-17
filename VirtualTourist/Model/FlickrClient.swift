@@ -14,64 +14,64 @@ class FlickrClient : NSObject {
     static let sharedInstance = FlickrClient()
     
     //shared session
-    var session: NSURLSession
+    var session: URLSession
     
     //shared student location arrays
     var photos = NSSet()
     
     override init()
     {
-        session = NSURLSession.sharedSession()
+        session = URLSession.shared
         super.init()
     }
     
     //MARK --- Get
-    func taskForGetMethod(parameters: [String : AnyObject], completionHandler: (result: AnyObject!, error: NSError?) -> Void) -> NSURLSessionDataTask
+    func taskForGetMethod(_ parameters: [String : AnyObject], completionHandler: @escaping (_ result: AnyObject?, _ error: NSError?) -> Void) -> URLSessionDataTask
     {
         //build the url and configure the request
         let urlString = FlickrClient.Constants.BASE_URL + FlickrClient.escapedParameters(parameters)
         //print("attempting to request the following url:\n  \(urlString)")
-        let url = NSURL(string: urlString)!
-        let request = NSURLRequest(URL: url)
+        let url = URL(string: urlString)!
+        let request = URLRequest(url: url)
         
         //make the request
-        let task = session.dataTaskWithRequest(request) { data, response, downloadError in
+        let task = session.dataTask(with: request, completionHandler: { data, response, downloadError in
             
             //parse and use the data (happens in completion handler)
             if let error = downloadError
             {
-                let newError = FlickrClient.errorForData(data, response: response, error: error)
-                completionHandler(result: nil, error: newError)
+                let newError = FlickrClient.errorForData(data, response: response, error: error as NSError)
+                completionHandler(nil, newError)
             }
             else
             {
                 FlickrClient.parseJSONWithCompletionHandler(data!, completionHandler: completionHandler)
             }
-        }
+        }) 
         
         task.resume()
         return task
     }
     
     //MARK --- Download
-    func downloadImage(url: NSURL, completionHandler: (data: NSData?, error: NSError?) -> Void) -> Void
+    func downloadImage(_ url: URL, completionHandler: @escaping (_ data: Data?, _ error: NSError?) -> Void) -> Void
     {
-        let request = NSURLRequest(URL: url)
+        let request = URLRequest(url: url)
         
         //make the request
-        let task = session.dataTaskWithRequest(request) { data, response, downloadError in
+        let task = session.dataTask(with: request, completionHandler: { data, response, downloadError in
             
             //parse and use the data (happens in completion handler)
             if let error = downloadError
             {
-                let newError = FlickrClient.errorForData(data, response: response, error: error)
-                completionHandler(data: nil, error: newError)
+                let newError = FlickrClient.errorForData(data, response: response, error: error as NSError)
+                completionHandler(nil, newError)
             }
             else
             {
-                completionHandler(data: data, error: nil)
+                completionHandler(data, nil)
             }
-        }
+        }) 
         
         task.resume()
     }
@@ -79,9 +79,9 @@ class FlickrClient : NSObject {
     //MARK --- Helpers
     
     //given a response with error, see if a status_message is returned, otherwise return the previous error
-    class func errorForData(data: NSData?, response: NSURLResponse?, error: NSError?) -> NSError
+    class func errorForData(_ data: Data?, response: URLResponse?, error: NSError?) -> NSError
     {
-        if let parsedResult = (try? NSJSONSerialization.JSONObjectWithData(data!, options: NSJSONReadingOptions.AllowFragments)) as? [String : AnyObject]
+        if let parsedResult = (try? JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.allowFragments)) as? [String : AnyObject]
         {
             if let errorMessage = parsedResult[FlickrClient.JSONResponseKeys.STATUS] as? String
             {
@@ -100,7 +100,7 @@ class FlickrClient : NSObject {
     }
     
     //Given raw JSON, return a useable Foundation object
-    class func parseJSONWithCompletionHandler(data: NSData, completionHandler: (result: AnyObject!, error: NSError?) -> Void)
+    class func parseJSONWithCompletionHandler(_ data: Data, completionHandler: (_ result: AnyObject?, _ error: NSError?) -> Void)
     {
         var parsingError: NSError? = nil
         
@@ -108,7 +108,7 @@ class FlickrClient : NSObject {
         
         do
         {
-            parsedResult = try NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments)
+            parsedResult = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) as AnyObject
         }
         catch let error as NSError
         {
@@ -118,28 +118,28 @@ class FlickrClient : NSObject {
         
         if let error = parsingError
         {
-            completionHandler(result: nil, error: error)
+            completionHandler(nil, error)
         }
         else
         {
-            if let _ = parsedResult?.valueForKey(FlickrClient.JSONResponseKeys.CODE) as? String
+            if let _ = parsedResult?.value(forKey: FlickrClient.JSONResponseKeys.CODE) as? String
             {
                 let newError = errorForData(data, response: nil, error: nil)
-                completionHandler(result: nil, error: newError)
+                completionHandler(nil, newError)
             }
             else
             {
-                completionHandler(result: parsedResult, error: nil)
+                completionHandler(parsedResult, nil)
             }
             
         }
     }
     
     //given a dictionary of parameters, convert to a string for a url
-    class func escapedParameters(parameters: [String : AnyObject]) -> String
+    class func escapedParameters(_ parameters: [String : AnyObject]) -> String
     {
-        let queryItems = parameters.map { NSURLQueryItem(name: $0, value: $1 as? String) }
-        let components = NSURLComponents()
+        let queryItems = parameters.map { URLQueryItem(name: $0, value: $1 as? String) }
+        var components = URLComponents()
         
         components.queryItems = queryItems
         return components.percentEncodedQuery ?? ""

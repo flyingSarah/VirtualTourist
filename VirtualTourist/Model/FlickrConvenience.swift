@@ -8,12 +8,36 @@
 
 import UIKit
 import Foundation
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l < r
+  case (nil, _?):
+    return true
+  default:
+    return false
+  }
+}
+
+// FIXME: comparison operators with optionals were removed from the Swift Standard Libary.
+// Consider refactoring the code to use the non-optional operators.
+fileprivate func > <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
+  switch (lhs, rhs) {
+  case let (l?, r?):
+    return l > r
+  default:
+    return rhs < lhs
+  }
+}
+
 
 extension FlickrClient {
     
     //MARK: Student Location Methods
     
-    func getPhotos(pin: Location, completionHandler: (result: NSSet?, error: NSError?) -> Void)
+    func getPhotos(_ pin: Location, completionHandler: @escaping (_ result: NSSet?, _ error: NSError?) -> Void)
     {
         //specify parameters and method
         let validLat = validLatitude(pin.latitude)
@@ -33,18 +57,18 @@ extension FlickrClient {
             ]
             
             //make the request
-            taskForGetMethod(parameters) { JSONResult, error in
+            taskForGetMethod(parameters as [String : AnyObject]) { JSONResult, error in
                 
                 //send the desired values to the completion handler
                 if let error = error
                 {
-                    completionHandler(result: nil, error: error)
+                    completionHandler(nil, error)
                 }
                 else
                 {
-                    if let results = JSONResult.valueForKey(FlickrClient.JSONResponseKeys.PHOTOS) as? NSDictionary
+                    if let results = JSONResult?.value(forKey: FlickrClient.JSONResponseKeys.PHOTOS) as? NSDictionary
                     {
-                        if let totalPages = results.valueForKey(FlickrClient.JSONResponseKeys.PAGES) as? Int
+                        if let totalPages = results.value(forKey: FlickrClient.JSONResponseKeys.PAGES) as? Int
                         {
                             //flickr will only return up to 4000 images (100 per page & 40 page max)
                             let pageLimit = min(totalPages, FlickrClient.Constants.MAX_TOTAL_PAGES)
@@ -53,23 +77,23 @@ extension FlickrClient {
                             var pageAddedParameters = parameters
                             pageAddedParameters[FlickrClient.MethodArgumentKeys.PAGE] = pageNumberString
                             
-                            self.taskForGetMethod(pageAddedParameters) { pageAddedJSONResult, pageAddedError in
+                            self.taskForGetMethod(pageAddedParameters as [String : AnyObject]) { pageAddedJSONResult, pageAddedError in
                                 
                                 if let pageAddedError = pageAddedError
                                 {
-                                    completionHandler(result: nil, error: pageAddedError)
+                                    completionHandler(nil, pageAddedError)
                                 }
                                 else
                                 {
-                                    if let photosDictionary = pageAddedJSONResult.valueForKey(FlickrClient.JSONResponseKeys.PHOTOS) as? NSDictionary
+                                    if let photosDictionary = pageAddedJSONResult?.value(forKey: FlickrClient.JSONResponseKeys.PHOTOS) as? NSDictionary
                                     {
-                                        if let totalPhotosString = photosDictionary.valueForKey(FlickrClient.JSONResponseKeys.TOTAL) as? String
+                                        if let totalPhotosString = photosDictionary.value(forKey: FlickrClient.JSONResponseKeys.TOTAL) as? String
                                         {
                                             let totalPhotos = Int(totalPhotosString)
                                             
                                             if(totalPhotos > 0)
                                             {
-                                                if let photoArray = photosDictionary.valueForKey("photo") as? [[String : AnyObject]]
+                                                if let photoArray = photosDictionary.value(forKey: "photo") as? [[String : AnyObject]]
                                                 {
                                                     if(photoArray.count > 0)
                                                     {
@@ -78,19 +102,19 @@ extension FlickrClient {
                                                         let photos = Photo.photosFromResults(photoArray, location: pin)
                                                         FlickrClient.sharedInstance.photos = photos
                                                         
-                                                        completionHandler(result: photos, error: nil)
+                                                        completionHandler(photos, nil)
                                                     }
                                                     else
                                                     {
                                                         //I noticed that sometimes Flickr returns an empty photo array when I use the page parameter to search.  After much testing I decided it must be a Flickr bug so I decided to just get Page 1's results in those cases so that I will always be able to display photos if there are any to display.
                                                         
-                                                        if let totalPageOnePhotosString = results.valueForKey(FlickrClient.JSONResponseKeys.TOTAL) as? String
+                                                        if let totalPageOnePhotosString = results.value(forKey: FlickrClient.JSONResponseKeys.TOTAL) as? String
                                                         {
                                                             let totalPageOnePhotos = Int(totalPageOnePhotosString)
                                                             
                                                             if(totalPageOnePhotos > 0)
                                                             {
-                                                                if let pageOnePhotoArray = results.valueForKey("photo") as? [[String : AnyObject]]
+                                                                if let pageOnePhotoArray = results.value(forKey: "photo") as? [[String : AnyObject]]
                                                                 {
                                                                     if(pageOnePhotoArray.count > 1)
                                                                     {
@@ -99,43 +123,43 @@ extension FlickrClient {
                                                                         let photos = Photo.photosFromResults(pageOnePhotoArray, location: pin)
                                                                         FlickrClient.sharedInstance.photos = photos
                                                                         
-                                                                        completionHandler(result: photos, error: nil)
+                                                                        completionHandler(photos, nil)
                                                                     }
                                                                     else
                                                                     {
-                                                                        completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Photos array was empty on Page 1 of Flickr Results"]))
+                                                                        completionHandler(nil, NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Photos array was empty on Page 1 of Flickr Results"]))
                                                                     }
                                                                     
                                                                 }
                                                                 else
                                                                 {
-                                                                    completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find photo key from Page 1 of Flickr result"]))
+                                                                    completionHandler(nil, NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find photo key from Page 1 of Flickr result"]))
                                                                 }
                                                             }
                                                             else
                                                             {
-                                                                completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Found 0 photos from Page 1 of Flickr result"]))
+                                                                completionHandler(nil, NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Found 0 photos from Page 1 of Flickr result"]))
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find total photos key from Page 1 of Flickr result"]))
+                                                            completionHandler(nil, NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find total photos key from Page 1 of Flickr result"]))
                                                         }
                                                     }
                                                 }
                                                 else
                                                 {
-                                                    completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find photo key from Flickr result"]))
+                                                    completionHandler(nil, NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find photo key from Flickr result"]))
                                                 }
                                             }
                                             else
                                             {
-                                                completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Found 0 photos from Flickr result"]))
+                                                completionHandler(nil, NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Found 0 photos from Flickr result"]))
                                             }
                                         }
                                         else
                                         {
-                                            completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find total photos key from Flickr result"]))
+                                            completionHandler(nil, NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find total photos key from Flickr result"]))
                                         }
                                     }
                                 }
@@ -143,12 +167,12 @@ extension FlickrClient {
                         }
                         else
                         {
-                            completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find total pages key from Flickr result"]))
+                            completionHandler(nil, NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not find total pages key from Flickr result"]))
                         }
                     }
                     else
                     {
-                        completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not aquire photos from Flickr result"]))
+                        completionHandler(nil, NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey : "Could not aquire photos from Flickr result"]))
                     }
                 }
             }
@@ -157,21 +181,21 @@ extension FlickrClient {
         {
             if (!validLat && !validLon)
             {
-                completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Lat/Lon Invalid.\nLat should be [-90, 90].\nLon should be [-180, 180]."]))
+                completionHandler(nil, NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Lat/Lon Invalid.\nLat should be [-90, 90].\nLon should be [-180, 180]."]))
             }
             else if (!validLat)
             {
-                completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Lat Invalid.\nLat should be [-90, 90]."]))
+                completionHandler(nil, NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Lat Invalid.\nLat should be [-90, 90]."]))
             }
             else
             {
-                completionHandler(result: nil, error: NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Lon Invalid.\nLon should be [-180, 180]."]))
+                completionHandler(nil, NSError(domain: "getPhotos parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Lon Invalid.\nLon should be [-180, 180]."]))
             }
         }
     }
     
     /* Check to make sure the latitude falls within [-90, 90] */
-    func validLatitude(latitude: Double) -> Bool
+    func validLatitude(_ latitude: Double) -> Bool
     {
         if (latitude < FlickrClient.Constants.LAT_MIN || latitude > FlickrClient.Constants.LAT_MAX)
         {
@@ -181,7 +205,7 @@ extension FlickrClient {
         return true
     }
     
-    func validLongitude(longitude: Double) -> Bool
+    func validLongitude(_ longitude: Double) -> Bool
     {
         if (longitude < FlickrClient.Constants.LON_MIN || longitude > FlickrClient.Constants.LON_MAX)
         {
@@ -191,7 +215,7 @@ extension FlickrClient {
         return true
     }
     
-    func createBoundingBoxString(latitude: Double, longitude: Double) -> String!
+    func createBoundingBoxString(_ latitude: Double, longitude: Double) -> String!
     {
         //ensure box is bounded by minimum and maximum allowed values
         let bottom_left_lon = max(longitude - FlickrClient.Constants.BOUNDING_BOX_HALF_WIDTH, FlickrClient.Constants.LON_MIN)

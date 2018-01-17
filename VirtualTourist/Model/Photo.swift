@@ -28,9 +28,9 @@ class Photo : NSManagedObject {
     
     var loadUpdateHandler: (() -> Void)?
     
-    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?)
+    override init(entity: NSEntityDescription, insertInto context: NSManagedObjectContext?)
     {
-        super.init(entity: entity, insertIntoManagedObjectContext: context)
+        super.init(entity: entity, insertInto: context)
     }
     
     override func prepareForDeletion()
@@ -39,11 +39,11 @@ class Photo : NSManagedObject {
         
         if let path = path
         {
-            if(NSFileManager.defaultManager().fileExistsAtPath(path))
+            if(FileManager.default.fileExists(atPath: path))
             {
                 do
                 {
-                    try NSFileManager.defaultManager().removeItemAtPath(path)
+                    try FileManager.default.removeItem(atPath: path)
                 }
                 catch
                 {
@@ -57,9 +57,9 @@ class Photo : NSManagedObject {
     {
         
         // Get the entity associated with the "Photo" type.
-        let entity =  NSEntityDescription.entityForName("Photo", inManagedObjectContext: context)!
+        let entity =  NSEntityDescription.entity(forEntityName: "Photo", in: context)!
         
-        super.init(entity: entity, insertIntoManagedObjectContext: context)
+        super.init(entity: entity, insertInto: context)
         
         url_m = dictionary[Keys.ImageURL] as! String
         path = dictionary[Keys.ImagePath] as? String
@@ -69,7 +69,7 @@ class Photo : NSManagedObject {
     }
     
     //given an array of dictionaries, convert them to an array of photo result objects
-    static func photosFromResults(results: [[String : AnyObject]], location: Location) -> NSSet
+    static func photosFromResults(_ results: [[String : AnyObject]], location: Location) -> NSSet
     {
         var photos = NSSet()
         
@@ -94,17 +94,17 @@ class Photo : NSManagedObject {
             if(countResults < (maxResults + startCount) && countResults >= startCount)
             {
                 //format the image path
-                if let imageURL = NSURL(string: result[Keys.ImageURL] as! String)
+                if let imageURL = URL(string: result[Keys.ImageURL] as! String)
                 {
-                    let imagePath = "/\(imageURL.lastPathComponent!)" ?? ""
+                    let imagePath = "/\(imageURL.lastPathComponent)" 
                     
                     //for now I'm just saving the image title and url
-                    let filteredResult: [String: AnyObject] = [Keys.Title: result[Keys.Title]!, Keys.ImageURL: result[Keys.ImageURL]!, Keys.ImagePath: imagePath, Keys.Location: location, Keys.UniqueID: countResults]
+                    let filteredResult: [String: AnyObject] = [Keys.Title: result[Keys.Title]!, Keys.ImageURL: result[Keys.ImageURL]!, Keys.ImagePath: imagePath as AnyObject, Keys.Location: location, Keys.UniqueID: countResults as AnyObject]
                     
-                    dispatch_async(dispatch_get_main_queue()) {
+                    DispatchQueue.main.async {
                         
                         //print("photo \(photos.count) will download")
-                        photos = photos.setByAddingObject(Photo(dictionary: filteredResult, context: CoreDataStackManager.sharedInstance().managedObjectContext))
+                        photos = photos.adding(Photo(dictionary: filteredResult, context: CoreDataStackManager.sharedInstance().managedObjectContext)) as NSSet
                     }
                     
                 }
@@ -114,7 +114,7 @@ class Photo : NSManagedObject {
                 }
             }
             
-            countResults++
+            countResults += 1
         }
         
         return photos

@@ -45,28 +45,28 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         //set the map view delegate
         mapView.delegate = self
         
-        longPressRecognizer = UILongPressGestureRecognizer(target: self, action: Selector("pinDrop:"))
+        longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(MapViewController.pinDrop(_:)))
         longPressRecognizer?.minimumPressDuration = 0.5
         
         //check to see if the app has been launched before, if so, load the user defaults for the map region
-        let appHasBeenLaunchedBefore = NSUserDefaults.standardUserDefaults().boolForKey(Keys.AppHasBeenLaunchedBefore)
+        let appHasBeenLaunchedBefore = UserDefaults.standard.bool(forKey: Keys.AppHasBeenLaunchedBefore)
         
         if(appHasBeenLaunchedBefore)
         {
             //Retreive the Map Region from the NSUserDefaults
-            let latitudeDelta = NSUserDefaults.standardUserDefaults().doubleForKey(Keys.LatitudeDelta) as CLLocationDegrees
-            let longitudeDelta = NSUserDefaults.standardUserDefaults().doubleForKey(Keys.LongitudeDelta) as CLLocationDegrees
+            let latitudeDelta = UserDefaults.standard.double(forKey: Keys.LatitudeDelta) as CLLocationDegrees
+            let longitudeDelta = UserDefaults.standard.double(forKey: Keys.LongitudeDelta) as CLLocationDegrees
             let coordinateSpan = MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
             
-            let centerLatitude = NSUserDefaults.standardUserDefaults().doubleForKey(Keys.CenterLatitude) as CLLocationDegrees
-            let centerLongitude = NSUserDefaults.standardUserDefaults().doubleForKey(Keys.CenterLongitude) as CLLocationDegrees
+            let centerLatitude = UserDefaults.standard.double(forKey: Keys.CenterLatitude) as CLLocationDegrees
+            let centerLongitude = UserDefaults.standard.double(forKey: Keys.CenterLongitude) as CLLocationDegrees
             let centerLocation = CLLocationCoordinate2D(latitude: centerLatitude, longitude: centerLongitude)
             
             mapView.setRegion(MKCoordinateRegion(center: centerLocation, span: coordinateSpan), animated: false)
         }
         else
         {
-            NSUserDefaults.standardUserDefaults().setBool(true, forKey: Keys.AppHasBeenLaunchedBefore)
+            UserDefaults.standard.set(true, forKey: Keys.AppHasBeenLaunchedBefore)
         }
         
         
@@ -89,7 +89,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         
     }
     
-    override func viewWillAppear(animated: Bool)
+    override func viewWillAppear(_ animated: Bool)
     {
         super.viewWillAppear(animated)
         
@@ -104,7 +104,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     //MARK --- Button Behavior
     
-    @IBAction func deleteButtonPressed(sender: AnyObject)
+    @IBAction func deleteButtonPressed(_ sender: AnyObject)
     {
         //TODO: might want to check to see if there are any pins first before entering delete mode
         
@@ -112,7 +112,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         {
             deleteModeEnabled = false
             deleteModeButton.title = "Delete"
-            deleteLabel.hidden = true
+            deleteLabel.isHidden = true
             addPinDropRecognizer()
             
         }
@@ -120,7 +120,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         {
             deleteModeEnabled = true
             deleteModeButton.title = "Done"
-            deleteLabel.hidden = false
+            deleteLabel.isHidden = false
             removePinDropRecognizer()
         }
     }
@@ -130,12 +130,12 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     func fetchLocations() -> [Location]
     {
-        let fetchRequest = NSFetchRequest(entityName: "Location")
+        let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: "Location")
         
         //get all of the locations
         do
         {
-            let fetchedLocations = try sharedContext.executeFetchRequest(fetchRequest) as! [Location]
+            let fetchedLocations = try sharedContext.fetch(fetchRequest) as! [Location]
             return fetchedLocations
         }
         catch
@@ -154,14 +154,14 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         view.removeGestureRecognizer(longPressRecognizer!)
     }
     
-    func pinDrop(recognizer: UILongPressGestureRecognizer)
+    @objc func pinDrop(_ recognizer: UILongPressGestureRecognizer)
     {
         //I learned how to get the pins location and allow dragging right when it's dropped from this thread on the forums: https://discussions.udacity.com/t/how-can-i-make-a-new-pin-draggable-right-after-adding-it/26653
-        let longPressLocation: CGPoint = recognizer.locationInView(mapView)
-        let pinLocation = mapView.convertPoint(longPressLocation, toCoordinateFromView: mapView)
+        let longPressLocation: CGPoint = recognizer.location(in: mapView)
+        let pinLocation = mapView.convert(longPressLocation, toCoordinateFrom: mapView)
         
         //depending on the state of the gesture, add or select a pin, move it, or save the context
-        if(recognizer.state == UIGestureRecognizerState.Began)
+        if(recognizer.state == UIGestureRecognizerState.began)
         {
             currentPin = Pin()
             
@@ -176,7 +176,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             
             mapView.addAnnotation(currentPin)
         }
-        else if(recognizer.state == UIGestureRecognizerState.Ended)
+        else if(recognizer.state == UIGestureRecognizerState.ended)
         {
             //save context now that new pins have been added
             CoreDataStackManager.sharedInstance().saveContext()
@@ -185,7 +185,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     //MARK --- Map View Delegate
     
-    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView)
+    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView)
     {
         //this makes it so you can delete the annotation even if it was already the selected annotation
         mapView.deselectAnnotation(view.annotation, animated: false)
@@ -201,7 +201,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 
                 //delete the pin if we are in edit mode
                 mapView.removeAnnotation(annotation)
-                sharedContext.deleteObject(currentPin.location!)
+                sharedContext.delete(currentPin.location!)
                 CoreDataStackManager.sharedInstance().saveContext()
             }
             else
@@ -211,7 +211,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     didDragPin = false
                     print("move pin to latitude: \(round(1000*currentPin.coordinate.latitude)/1000) longitude: \(round(1000*currentPin.coordinate.longitude)/1000)")
                     
-                    sharedContext.deleteObject(currentPin.location!)
+                    sharedContext.delete(currentPin.location!)
                     
                     currentPin.location = Location(latitude: annotation.coordinate.latitude, longitude: annotation.coordinate.longitude, context: sharedContext)
                     
@@ -222,13 +222,13 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     print("go to the selected annotation view at latitude : \(round(1000*currentPin.coordinate.latitude)/1000) longitude: \(round(1000*currentPin.coordinate.longitude)/1000)")
                     
                     //set the current pin as the pin that the photo controller will use
-                    let photoController = storyboard!.instantiateViewControllerWithIdentifier("PhotoViewController") as! PhotoViewController
+                    let photoController = storyboard!.instantiateViewController(withIdentifier: "PhotoViewController") as! PhotoViewController
                     
                     photoController.thisPin = currentPin
                     
                     //set the back item to say "OK" instead of "Virtual Tourist"
                     //learned how to do this from this stackoverflow topic: http://stackoverflow.com/questions/9871578/how-to-change-the-uinavigationcontroller-back-button-name
-                    let backItem = UIBarButtonItem(title: "OK", style: .Plain, target: nil, action: nil)
+                    let backItem = UIBarButtonItem(title: "OK", style: .plain, target: nil, action: nil)
                     navigationItem.backBarButtonItem = backItem
                     
                     //go to the photo view controller
@@ -238,11 +238,11 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         }
     }
     
-    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView?
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView?
     {
         let reuseID = "pin"
         
-        var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseID) as? MKPinAnnotationView
+        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseID) as? MKPinAnnotationView
         
         if(pinView == nil)
         {
@@ -253,7 +253,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             pinView!.annotation = annotation
         }
         
-        pinView?.draggable = true
+        pinView?.isDraggable = true
         
         //to drag the pin it must be selected
         pinView?.setSelected(true, animated: false)
@@ -263,17 +263,17 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     
     //learned about this function from this stackoverflow page: http://stackoverflow.com/questions/29776853/ios-swift-mapkit-making-an-annotation-draggable-by-the-user
-    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState)
+    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, didChange newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState)
     {
         switch (newState)
         {
-        case .Ending, .Canceling:
+        case .ending, .canceling:
             didDragPin = true
         default: break
         }
     }
     
-    func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool)
+    func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool)
     {
         //save map region to the user defaults whenever it changes
         let latitudeDelta = mapView.region.span.latitudeDelta as Double
@@ -281,9 +281,9 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         let centerLatitude = mapView.region.center.latitude as Double
         let centerLongitude = mapView.region.center.longitude as Double
         
-        NSUserDefaults.standardUserDefaults().setDouble(latitudeDelta, forKey: Keys.LatitudeDelta)
-        NSUserDefaults.standardUserDefaults().setDouble(longitudeDelta, forKey: Keys.LongitudeDelta)
-        NSUserDefaults.standardUserDefaults().setDouble(centerLatitude, forKey: Keys.CenterLatitude)
-        NSUserDefaults.standardUserDefaults().setDouble(centerLongitude, forKey: Keys.CenterLongitude)
+        UserDefaults.standard.set(latitudeDelta, forKey: Keys.LatitudeDelta)
+        UserDefaults.standard.set(longitudeDelta, forKey: Keys.LongitudeDelta)
+        UserDefaults.standard.set(centerLatitude, forKey: Keys.CenterLatitude)
+        UserDefaults.standard.set(centerLongitude, forKey: Keys.CenterLongitude)
     }
 }
